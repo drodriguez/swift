@@ -49,6 +49,13 @@ func testVariableTypes(_ param: Int, param2: inout Double) {
 // FULL:          IntegerLiteralExpr:[[@LINE-4]] '''42''' Swift.Int64{{$}}
   a5 = 17; _ = a5
 
+  var a6 : Int128 = 42
+  // CHECK: VarDecl '''a6''' Int128{{$}}
+  // CHECK:         IntegerLiteralExpr:[[@LINE-2]] '''42''' Int128{{$}}
+  // FULL:  VarDecl '''a6''' Swift.Int128{{$}}
+  // FULL:          IntegerLiteralExpr:[[@LINE-4]] '''42''' Swift.Int128{{$}}
+  a6 = 17; _ = a6
+
   var typealias1 : MyInt = 42
 // CHECK: VarDecl '''typealias1''' MyInt{{$}}
 // CHECK:         IntegerLiteralExpr:[[@LINE-2]] '''42''' Int{{$}}

@@ -56,7 +56,8 @@ func variable_use<T>(_ x: inout T) {}
 %{
 type_initializer_map = [
   #// Basic types.
-   ("UInt64", "64"), ("UInt32", "32"), ("Int64", "64"), ("Int32", "32"),
+   ("UInt128", "128"), ("UInt64", "64"), ("UInt32", "32"),
+   ("Int128", "128"), ("Int64", "64"), ("Int32", "32"),
    ("Int", "42"), ("UInt", "42"),
    ("Float", "2.71"), ("Double", "3.14"),
   #// Sugared types and strings.

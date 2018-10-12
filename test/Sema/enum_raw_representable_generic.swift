@@ -20,20 +20,23 @@ struct MyNumber : ExpressibleByIntegerLiteral, Equatable {
   }
 }
 
-let _ : Int8  = Foo.a.rawValue
-let _ : Int16 = Foo.a.rawValue
-let _ : Int32 = Foo.a.rawValue
-let _ : Int64 = Foo.a.rawValue
-let _ : UInt8  = Foo.a.rawValue
-let _ : UInt16 = Foo.a.rawValue
-let _ : UInt32 = Foo.a.rawValue
-let _ : UInt64 = Foo.a.rawValue
+let _ : Int8   = Foo.a.rawValue
+let _ : Int16  = Foo.a.rawValue
+let _ : Int32  = Foo.a.rawValue
+let _ : Int64  = Foo.a.rawValue
+let _ : Int128 = Foo.a.rawValue
+let _ : UInt8    = Foo.a.rawValue
+let _ : UInt16   = Foo.a.rawValue
+let _ : UInt32   = Foo.a.rawValue
+let _ : UInt64   = Foo.a.rawValue
+let _ : UInt128  = Foo.a.rawValue
 let _ : MyNumber = Foo.a.rawValue
 
-guard case .c = Foo(rawValue: UInt8(42))!  else { fatalError() }
-guard case .c = Foo(rawValue: UInt16(42))! else { fatalError() }
-guard case .c = Foo(rawValue: UInt32(42))! else { fatalError() }
-guard case .c = Foo(rawValue: UInt64(42))! else { fatalError() }
+guard case .c = Foo(rawValue: UInt8(42))!   else { fatalError() }
+guard case .c = Foo(rawValue: UInt16(42))!  else { fatalError() }
+guard case .c = Foo(rawValue: UInt32(42))!  else { fatalError() }
+guard case .c = Foo(rawValue: UInt64(42))!  else { fatalError() }
+guard case .c = Foo(rawValue: UInt128(42))! else { fatalError() }
 guard case .c = Foo(rawValue: MyNumber(integerLiteral: 42))! else { fatalError() }
 
 guard case .d = Foo(rawValue: MyNumber(integerLiteral: 43))! else { fatalError() }

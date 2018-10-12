@@ -315,7 +315,7 @@ var il_i: Int64  = 18446744073709551615
 // This constant is too large to fit in an Int64, but it is fine for Int128.
 // FIXME: Should warn about the first. <rdar://problem/14070127>
 var il_j: Int64  = 18446744073709551616
-// var il_k: Int128 = 18446744073709551616
+var il_k: Int128 = 18446744073709551616
 
 var bin_literal: Int64 = 0b100101
 var hex_literal: Int64 = 0x100101

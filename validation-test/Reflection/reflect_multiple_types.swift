@@ -33,6 +33,8 @@ class TestClass {
     var t19: UInt32
     var t20: UInt64
     var t21: UInt8
+    var t22: Int128
+    var t23: UInt128
     init(
         t00: Array<Int>,
         t01: Bool,
@@ -55,7 +57,9 @@ class TestClass {
         t18: UInt16,
         t19: UInt32,
         t20: UInt64,
-        t21: UInt8
+        t21: UInt8,
+        t22: Int128,
+        t23: UInt128,
     ) {
         self.t00 = t00
         self.t01 = t01
@@ -79,6 +83,8 @@ class TestClass {
         self.t19 = t19
         self.t20 = t20
         self.t21 = t21
+        self.t22 = t22
+        self.t23 = t23
     }
 }
 
@@ -104,7 +110,9 @@ var obj = TestClass(
     t18: 123,
     t19: 123,
     t20: 123,
-    t21: 123
+    t21: 123,
+    t22: 123,
+    t23: 123,
 )
 
 reflect(object: obj)
@@ -115,7 +123,7 @@ reflect(object: obj)
 // CHECK-64: (class reflect_multiple_types.TestClass)
 
 // CHECK-64-LABEL: Type info:
-// CHECK-64-NEXT: (class_instance size=185 alignment=8 stride=192 num_extra_inhabitants=0 bitwise_takable=1
+// CHECK-64-NEXT: (class_instance size=217 alignment=8 stride=224 num_extra_inhabitants=0 bitwise_takable=1
 // CHECK-64-NEXT:   (field name=t00 offset=16
 // CHECK-64-NEXT:     (struct size=8 alignment=8 stride=8 num_extra_inhabitants=2147483647 bitwise_takable=1
 // (unstable implementation details omitted)
@@ -207,6 +215,14 @@ reflect(object: obj)
 // CHECK-64-NEXT:     (struct size=1 alignment=1 stride=1 num_extra_inhabitants=0 bitwise_takable=1
 // CHECK-64-NEXT:       (field name=_value offset=0
 // CHECK-64-NEXT:         (builtin size=1 alignment=1 stride=1 num_extra_inhabitants=0 bitwise_takable=1)))))
+// CHECK-64-NEXT:   (field name=t22 offset=185
+// CHECK-64-NEXT:     (struct size=16 alignment=16 stride=16 num_extra_inhabitants=0 bitwise_takable=1
+// CHECK-64-NEXT:       (field name=_value offset=0
+// CHECK-64-NEXT:         (builtin size=16 alignment=16 stride=16 num_extra_inhabitants=0 bitwise_takable=1))))
+// CHECK-64-NEXT:   (field name=t23 offset=201
+// CHECK-64-NEXT:     (struct size=16 alignment=16 stride=16 num_extra_inhabitants=0 bitwise_takable=1
+// CHECK-64-NEXT:       (field name=_value offset=0
+// CHECK-64-NEXT:         (builtin size=16 alignment=16 stride=16 num_extra_inhabitants=0 bitwise_takable=1))))
 
 // CHECK-32: Reflecting an object.
 // CHECK-32: Instance pointer in child address space: 0x{{[0-9a-fA-F]+}}
@@ -291,6 +307,14 @@ reflect(object: obj)
 // CHECK-32-NEXT:     (struct size=1 alignment=1 stride=1 num_extra_inhabitants=0 bitwise_takable=1
 // CHECK-32-NEXT:       (field name=_value offset=0
 // CHECK-32-NEXT:         (builtin size=1 alignment=1 stride=1 num_extra_inhabitants=0 bitwise_takable=1)))))
+// CHECK-32-NEXT:   (field name=t22 offset=121
+// CHECK-32-NEXT:     (struct size=16 alignment=16 stride=16 num_extra_inhabitants=0 bitwise_takable=1
+// CHECK-32-NEXT:       (field name=_value offset=0
+// CHECK-32-NEXT:         (builtin size=16 alignment=16 stride=16 num_extra_inhabitants=0 bitwise_takable=1))))
+// CHECK-32-NEXT:   (field name=t23 offset=237
+// CHECK-32-NEXT:     (struct size=16 alignment=16 stride=16 num_extra_inhabitants=0 bitwise_takable=1
+// CHECK-32-NEXT:       (field name=_value offset=0
+// CHECK-32-NEXT:         (builtin size=16 alignment=16 stride=16 num_extra_inhabitants=0 bitwise_takable=1))))
 
 doneReflecting()
 

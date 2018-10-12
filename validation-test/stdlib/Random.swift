@@ -103,10 +103,12 @@ RandomTests.test("random integers in ranges") {
   integerRangeTest(Int16.self)
   integerRangeTest(Int32.self)
   integerRangeTest(Int64.self)
+  integerRangeTest(Int128.self)
   integerRangeTest(UInt8.self)
   integerRangeTest(UInt16.self)
   integerRangeTest(UInt32.self)
   integerRangeTest(UInt64.self)
+  integerRangeTest(UInt128.self)
 }
 
 // Random floating points in ranges

@@ -20,6 +20,8 @@ var glob_i32:  Int32 = 32
 // CHECK-DAG: !DIGlobalVariable(name: "glob_i32",{{.*}} scope: ![[TLC]],{{.*}} line: [[@LINE-1]],{{.*}} type: ![[I32:[^,]+]]
 var glob_i64:  Int64 = 64
 // CHECK-DAG: !DIGlobalVariable(name: "glob_i64",{{.*}} scope: ![[TLC]],{{.*}} line: [[@LINE-1]],{{.*}} type: ![[I64:[^,]+]]
+var glob_i128: Int128 = 128
+// CHECK-DAG: !DIGlobalVariable(name: "glob_i128",{{.*}} scope: ![[TLC]],{{.*}} line: [[@LINE-1]],{{.*}} type: ![[I128:[^,]+]]
 var glob_f:    Float = 2.89
 // CHECK-DAG: !DIGlobalVariable(name: "glob_f",{{.*}} scope: ![[TLC]],{{.*}} line: [[@LINE-1]],{{.*}} type: ![[F:[^,]+]]
 var glob_d:    Double = 3.14
@@ -30,11 +32,12 @@ var glob_s:    String = "😄"
 // CHECK-DAG: !DIGlobalVariable(name: "glob_s",{{.*}} scope: ![[TLC]],{{.*}} line: [[@LINE-1]],{{.*}} type: ![[S:[^,]+]]
 // FIXME: Dreadful type-checker performance prevents this from being this single
 // print expression:
-//   print("\(glob_v), \(glob_i8), \(glob_i16), \(glob_i32), \(glob_i64), \(glob_f), \(glob_d), \(glob_b), \(glob_s)", terminator: "")
+//   print("\(glob_v), \(glob_i8), \(glob_i16), \(glob_i32), \(glob_i64), \(glob_i128), \(glob_f), \(glob_d), \(glob_b), \(glob_s)", terminator: "")
 print(", \(glob_i8)", terminator: "")
 print(", \(glob_i16)", terminator: "")
 print(", \(glob_i32)", terminator: "")
 print(", \(glob_i64)", terminator: "")
+print(", \(glob_i128)", terminator: "")
 print(", \(glob_f)", terminator: "")
 print(", \(glob_d)", terminator: "")
 print(", \(glob_b)", terminator: "")

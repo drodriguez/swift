@@ -35,10 +35,12 @@ SetTests.test("contains<Hashable>(_:)") {
     expectTrue(s.contains(UInt16(i)))
     expectTrue(s.contains(UInt32(i)))
     expectTrue(s.contains(UInt64(i)))
+    expectTrue(s.contains(UInt128(i)))
     expectTrue(s.contains(UInt(i)))
     expectTrue(s.contains(Int16(i)))
     expectTrue(s.contains(Int32(i)))
     expectTrue(s.contains(Int64(i)))
+    expectTrue(s.contains(Int128(i)))
     expectTrue(s.contains(Int(i)))
     expectTrue(s.contains(Float(i)))
     expectTrue(s.contains(Double(i)))
@@ -59,10 +61,12 @@ SetTests.test("index<Hashable>(of:)") {
     expectEqual(index, s.firstIndex(of: UInt16(i)))
     expectEqual(index, s.firstIndex(of: UInt32(i)))
     expectEqual(index, s.firstIndex(of: UInt64(i)))
+    expectEqual(index, s.firstIndex(of: UInt128(i)))
     expectEqual(index, s.firstIndex(of: UInt(i)))
     expectEqual(index, s.firstIndex(of: Int16(i)))
     expectEqual(index, s.firstIndex(of: Int32(i)))
     expectEqual(index, s.firstIndex(of: Int64(i)))
+    expectEqual(index, s.firstIndex(of: Int128(i)))
     expectEqual(index, s.firstIndex(of: Int(i)))
     expectEqual(index, s.firstIndex(of: Float(i)))
     expectEqual(index, s.firstIndex(of: Double(i)))
@@ -253,11 +257,13 @@ SetTests.test("Hashable/Conversions") {
     [10 as UInt16, 20 as UInt16, 30 as UInt16],
     [10 as UInt32, 20 as UInt32, 30 as UInt32],
     [10 as UInt64, 20 as UInt64, 30 as UInt64],
+    [10 as UInt128, 20 as UInt128, 30 as UInt128],
     [10 as UInt, 20 as UInt, 30 as UInt],
     [10 as Int8, 20 as Int8, 30 as Int8],
     [10 as Int16, 20 as Int16, 30 as Int16],
     [10 as Int32, 20 as Int32, 30 as Int32],
     [10 as Int64, 20 as Int64, 30 as Int64],
+    [10 as Int128, 20 as Int128, 30 as Int128],
     [10 as Int, 20 as Int, 30 as Int],
     [10 as Float, 20 as Float, 30 as Float],
     [10 as Double, 20 as Double, 30 as Double],
@@ -266,7 +272,7 @@ SetTests.test("Hashable/Conversions") {
     [[1, 2, 3] as Set<UInt32>, [2, 3, 4] as Set<Int16>, [3, 4, 5] as Set<UInt>],
   ]
 
-  checkHashable(input, equalityOracle: { ($0 < 12) == ($1 < 12) })
+  checkHashable(input, equalityOracle: { ($0 < 14) == ($1 < 14) })
 }
 
 

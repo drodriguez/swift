@@ -325,6 +325,10 @@ func ff_inferredIntegerLiteralInt64() -> Int64 {
     0
 }
 
+func ff_inferredIntegerLiteralInt128() -> Int128 {
+    0
+}
+
 func ff_inferredIntegerLiteralMyOwnInt() -> MyOwnInt {
     0
 }

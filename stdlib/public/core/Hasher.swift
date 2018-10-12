@@ -168,6 +168,13 @@ extension Hasher {
     }
 
     @inline(__always)
+    internal mutating func combine(_ value: UInt128) {
+      for word in value.words {
+        combine(word)
+      }
+    }
+
+    @inline(__always)
     internal mutating func combine(_ value: UInt64) {
       _state.compress(_buffer.append(value))
     }
@@ -343,6 +350,12 @@ public struct Hasher {
   @_effects(releasenone)
   @usableFromInline
   internal mutating func _combine(_ value: UInt) {
+    _core.combine(value)
+  }
+
+  @_effects(releasenone)
+  @usableFromInline
+  internal mutating func _combine(_ value: UInt128) {
     _core.combine(value)
   }
 

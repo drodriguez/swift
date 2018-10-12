@@ -1554,6 +1554,9 @@ ${assignmentOperatorComment(x.operator, True)}
 %   # compilation block to exclude 64-bit Windows, which does not support
 %   # 128-bit operations
     fatalError("Operation is not supported")
+%   elif bits == 128:
+    // FIXME: Builtin.udiv_Int256 is not available
+    fatalError("Operation is not supported")
 %   else:
     // FIXME(integers): handle division by zero and overflows
     _precondition(self != 0, "Division by zero")

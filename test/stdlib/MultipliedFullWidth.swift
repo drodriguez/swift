@@ -74,12 +74,14 @@ func specialValues<T: FixedWidthInteger & UnsignedInteger>(_ type: T.Type) {
 
 tests.test("Special Values") {
   specialValues(Int.self)
+  specialValues(Int128.self)
   specialValues(Int64.self)
   specialValues(Int32.self)
   specialValues(Int16.self)
   specialValues(Int8.self)
   
   specialValues(UInt.self)
+  specialValues(UInt128.self)
   specialValues(UInt64.self)
   specialValues(UInt32.self)
   specialValues(UInt16.self)

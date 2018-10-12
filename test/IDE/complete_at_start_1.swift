@@ -12,6 +12,7 @@
 // A-DAG: Decl[Struct]/OtherModule[Swift]: Int16[#Int16#]{{; name=.+$}}
 // A-DAG: Decl[Struct]/OtherModule[Swift]: Int32[#Int32#]{{; name=.+$}}
 // A-DAG: Decl[Struct]/OtherModule[Swift]: Int64[#Int64#]{{; name=.+$}}
+// A-DAG: Decl[Struct]/OtherModule[Swift]: Int128[#Int128#]{{; name=.+$}}
 // A-DAG: Decl[Struct]/OtherModule[Swift]: Bool[#Bool#]{{; name=.+$}}
 // A: End completions
 

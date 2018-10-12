@@ -48,6 +48,9 @@ public func getInt32(_ x: Int32) -> Int32 { return _opaqueIdentity(x) }
 public func getInt64(_ x: Int64) -> Int64 { return _opaqueIdentity(x) }
 
 @inline(never)
+public func getInt128(_ x: Int128) -> Int128 { return _opaqueIdentity(x) }
+
+@inline(never)
 public func getInt(_ x: Int) -> Int { return _opaqueIdentity(x) }
 
 @inline(never)
@@ -61,6 +64,9 @@ public func getUInt32(_ x: UInt32) -> UInt32 { return _opaqueIdentity(x) }
 
 @inline(never)
 public func getUInt64(_ x: UInt64) -> UInt64 { return _opaqueIdentity(x) }
+
+@inline(never)
+public func getUInt128(_ x: UInt128) -> UInt128 { return _opaqueIdentity(x) }
 
 @inline(never)
 public func getUInt(_ x: UInt) -> UInt { return _opaqueIdentity(x) }

@@ -50,7 +50,7 @@ struct MyError : Error {
 % end
 
 // Integer values.
-% for TestType in 'UInt8', 'UInt16', 'UInt32', 'UInt64', 'Int8', 'Int16', 'Int32', 'Int64':
+% for TestType in 'UInt8', 'UInt16', 'UInt32', 'UInt64', 'UInt128', 'Int8', 'Int16', 'Int32', 'Int64', 'Int128':
 % for Num in range(0, 10):
   @inline(__always)
   func value${TestType}${Num}() -> ${TestType} {

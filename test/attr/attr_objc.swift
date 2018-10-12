@@ -921,19 +921,23 @@ class infer_instanceVar1 {
   var var_Int16: Int16
   var var_Int32: Int32
   var var_Int64: Int64
+  var var_Int128: Int128
 // CHECK-LABEL: @objc var var_Int8: Int8
 // CHECK-LABEL: @objc var var_Int16: Int16
 // CHECK-LABEL: @objc var var_Int32: Int32
 // CHECK-LABEL: @objc var var_Int64: Int64
+// CHECK-LABEL: @objc var var_Int128: Int128
 
   var var_UInt8: UInt8
   var var_UInt16: UInt16
   var var_UInt32: UInt32
   var var_UInt64: UInt64
+  var var_UInt128: UInt128
 // CHECK-LABEL: @objc var var_UInt8: UInt8
 // CHECK-LABEL: @objc var var_UInt16: UInt16
 // CHECK-LABEL: @objc var var_UInt32: UInt32
 // CHECK-LABEL: @objc var var_UInt64: UInt64
+// CHECK-LABEL: @objc var var_UInt128: UInt128
 
   var var_OpaquePointer: OpaquePointer
 // CHECK-LABEL: @objc var var_OpaquePointer: OpaquePointer

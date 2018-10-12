@@ -43,7 +43,7 @@ struct MyError : Error {
 % end
 
 // Integer values.
-% for TestType in 'UInt8', 'UInt16', 'UInt32', 'UInt64', 'Int8', 'Int16', 'Int32', 'Int64':
+% for TestType in 'UInt8', 'UInt16', 'UInt32', 'UInt64', 'UInt128', 'Int8', 'Int16', 'Int32', 'Int64', 'Int128':
 
   enum Enum${TestType} : Equatable {
     case Empty
@@ -131,12 +131,13 @@ func clobber${FuncName}(
 %end
 
 %{ testTypes = [
-     'Float', 'Float80', 'Double', 'UInt8', 'UInt16', 'UInt32', 'UInt64',
-     'Int8', 'Int16', 'Int32', 'Int64',
-     'EnumUInt8', 'EnumUInt16', 'EnumUInt32', 'EnumUInt64', 'EnumInt8',
-     'EnumInt16', 'EnumInt32', 'EnumInt64',
-     'StructUInt8', 'StructUInt16', 'StructUInt32', 'StructUInt64',
-     'StructInt8', 'StructInt16', 'StructInt32', 'StructInt64',
+     'Float', 'Float80', 'Double',
+     'UInt8', 'UInt16', 'UInt32', 'UInt64', 'UInt128',
+     'Int8', 'Int16', 'Int32', 'Int64', 'Int128',
+     'EnumUInt8', 'EnumUInt16', 'EnumUInt32', 'EnumUInt64', 'EnumUInt128',
+     'EnumInt8', 'EnumInt16', 'EnumInt32', 'EnumInt64', 'EnumInt128',
+     'StructUInt8', 'StructUInt16', 'StructUInt32', 'StructUInt64', 'StructUInt128',
+     'StructInt8', 'StructInt16', 'StructInt32', 'StructInt64', 'StructInt128',
    ]
 }%
 % for TestType in testTypes:

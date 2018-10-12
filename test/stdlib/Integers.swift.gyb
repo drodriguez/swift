@@ -718,12 +718,24 @@ tests.test("words") {
   expectEqualSequence([UInt.max >> 1], Int64.max.words)
   expectEqualSequence([(1 as UInt) << 63], Int64.min.words)
   expectEqualSequence([UInt.max], (-1 as Int64).words)
+
+  expectEqualSequence([UInt.max, UInt.max], UInt128.max.words)
+  expectEqualSequence([0 as UInt, 0 as UInt], UInt128.min.words)
+  expectEqualSequence([UInt.max, UInt.max >> 1], Int128.max.words)
+  expectEqualSequence([0 as UInt, (1 as UInt) << 63], Int128.min.words)
+  expectEqualSequence([UInt.max, UInt.max], (-1 as Int128).words)
 % else:
   expectEqualSequence([UInt.max, UInt.max], UInt64.max.words)
   expectEqualSequence([0 as UInt, 0], UInt64.min.words)
   expectEqualSequence([UInt.max, UInt.max >> 1], Int64.max.words)
   expectEqualSequence([0 as UInt, 1 << 31], Int64.min.words)
   expectEqualSequence([UInt.max, UInt.max], (-1 as Int64).words)
+
+  expectEqualSequence([UInt.max, UInt.max, UInt.max, UInt.max], UInt128.max.words)
+  expectEqualSequence([0 as UInt, 0 as UInt, 0 as UInt, 0 as UInt], UInt128.min.words)
+  expectEqualSequence([UInt.max >> 1, UInt.max, UInt.max, UInt.max], Int128.max.words)
+  expectEqualSequence([(1 as UInt) << 63, 0 as UInt, 0 as UInt, 0 as UInt], Int128.min.words)
+  expectEqualSequence([UInt.max, UInt.max, UInt.max, UInt.max], (-1 as Int128).words)
 % end
 
   expectEqualSequence([1], 1.words)
@@ -816,11 +828,13 @@ tests.test("isMultiple") {
   isMultipleTest(type: Int16.self)
   isMultipleTest(type: Int32.self)
   isMultipleTest(type: Int64.self)
+  isMultipleTest(type: Int128.self)
   isMultipleTest(type: UInt.self)
   isMultipleTest(type: UInt8.self)
   isMultipleTest(type: UInt16.self)
   isMultipleTest(type: UInt32.self)
   isMultipleTest(type: UInt64.self)
+  isMultipleTest(type: UInt128.self)
 }
 
 tests.test("MultiplyMinByMinusOne") {
@@ -857,7 +871,7 @@ tests.test("signum/generic") {
   func check<T : BinaryInteger>(_ expected: T, _ x: T) {
     expectEqual(expected, x.signum())
   }
-% for suffix in ['8', '16', '32', '64', '']:
+% for suffix in ['8', '16', '32', '64', '128', '']:
   check(-1, Int${suffix}.min)
   check(-1, (-42) as Int${suffix})
   check(-1, (-1) as Int${suffix})
@@ -871,7 +885,7 @@ tests.test("signum/generic") {
 }
 
 tests.test("signum/concrete") {
-% for suffix in ['8', '16', '32', '64', '']:
+% for suffix in ['8', '16', '32', '64', '128', '']:
   expectEqual(-1 as Int${suffix}, Int${suffix}.min.signum())
   expectEqual(-1 as Int${suffix}, (-42 as Int${suffix}).signum())
   expectEqual(-1 as Int${suffix}, (-1 as Int${suffix}).signum())
@@ -909,6 +923,12 @@ tests.test("binaryLogarithm/generic") {
   expectEqual(
     (42 as MockBinaryInteger<UInt64>)._binaryLogarithm(),
     (42 as UInt64)._binaryLogarithm())
+  expectEqual(
+    (42 as MockBinaryInteger<Int128>)._binaryLogarithm(),
+    (42 as Int128)._binaryLogarithm())
+  expectEqual(
+    (42 as MockBinaryInteger<UInt128>)._binaryLogarithm(),
+    (42 as UInt128)._binaryLogarithm())
   expectEqual(
     (42 as MockBinaryInteger<Int>)._binaryLogarithm(),
     (42 as Int)._binaryLogarithm())

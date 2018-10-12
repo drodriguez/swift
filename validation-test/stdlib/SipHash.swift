@@ -200,8 +200,10 @@ func testIntegerType<I: FixedWidthInteger>(
       }
     }
     // Combine tail bytes.
-    if count > 0 {
-      hasher._combine(bytes: UInt64(truncatingIfNeeded: chunk), count: count)
+    while count > 0 {
+      hasher._combine(bytes: UInt64(truncatingIfNeeded: chunk), count: min(count, UInt64.bitWidth / 8))
+      chunk = (chunk >> UInt64.bitWidth) & 0xffffffffffffffff
+      count -= (UInt64.bitWidth / 8)
     }
 
     let hash = hasher.finalize()
@@ -210,6 +212,7 @@ func testIntegerType<I: FixedWidthInteger>(
 }
 
 testIntegerType(UInt.self) { $0._combine($1) }
+testIntegerType(UInt128.self) { $0._combine($1) }
 testIntegerType(UInt64.self) { $0._combine($1) }
 testIntegerType(UInt32.self) { $0._combine($1) }
 testIntegerType(UInt16.self) { $0._combine($1) }

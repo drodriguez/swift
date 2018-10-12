@@ -9,7 +9,7 @@
 # See https://swift.org/CONTRIBUTORS.txt for the list of Swift project authors
 
 # Bit counts for all int types
-_all_integer_type_bitwidths = [8, 16, 32, 64]
+_all_integer_type_bitwidths = [8, 16, 32, 64, 128]
 
 # Number of bits in the biggest int type
 int_max_bits = max(_all_integer_type_bitwidths)
@@ -33,7 +33,7 @@ class SwiftIntegerType(object):
         self.is_signed = is_signed
 
         if is_word:
-            self.possible_bitwidths = [32, 64]
+            self.possible_bitwidths = [32, 64, 128]
         else:
             self.possible_bitwidths = [bits]
 
