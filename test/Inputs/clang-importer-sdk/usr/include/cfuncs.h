@@ -44,6 +44,10 @@ void nested_pointer_audited2(const int * _Nullable const * _Nonnull p);
 void decay_param_array(int p[]);
 void decay_param_const_array(const int p[]);
 
+#define SOME_BUF_LEN 2
+typedef long some_buf[SOME_BUF_LEN];
+void decay_param_typedef_array(some_buf buf);
+
 // FIXME: These two should work some day, too.  Right now we don't import
 // function types.
 void decay_param_func(void g(int));

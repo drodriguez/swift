@@ -154,6 +154,9 @@ func test_decay() {
   decay_param_const_array(&i)
   decay_param_const_array(a)
   decay_param_const_array([1, 2, 3])
+
+  var b: some_buf
+  decay_param_typedef_array(&b)
 }
 
 func test_nested_pointers() {
