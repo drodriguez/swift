@@ -50,6 +50,8 @@ namespace swift {
     CanImport,
     /// Target Environment (currently just 'simulator' or absent)
     TargetEnvironment,
+    /// Variable argument list standard
+    VariableArgumentList,
   };
 
   /// Describes which Swift 3 Objective-C inference warnings should be
@@ -388,7 +390,7 @@ namespace swift {
     }
 
   private:
-    llvm::SmallVector<std::pair<PlatformConditionKind, std::string>, 5>
+    llvm::SmallVector<std::pair<PlatformConditionKind, std::string>, 6>
         PlatformConditionValues;
     llvm::SmallVector<std::string, 2> CustomConditionalCompilationFlags;
   };

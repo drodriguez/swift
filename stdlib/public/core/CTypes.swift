@@ -219,7 +219,7 @@ extension UInt {
 }
 
 /// A wrapper around a C `va_list` pointer.
-#if arch(arm64) && os(Linux)
+#if _va_list_kind(_aarch64)
 @_fixed_layout
 public struct CVaListPointer {
   @usableFromInline // unsafe-performance

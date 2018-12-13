@@ -63,7 +63,7 @@ protocol _CVarArgAligned : CVarArg {
   var _cVarArgAlignment: Int { get }
 }
 
-#if arch(x86_64)
+#if _va_list_kind(_x86_64)
 @usableFromInline
 internal let _countGPRegisters = 6
 // Note to future visitors concerning the following SSE register count.
@@ -91,7 +91,7 @@ internal let _countGPRegisters = 16
 @usableFromInline
 internal let _registerSaveWords = _countGPRegisters
 
-#elseif arch(arm64) && os(Linux)
+#elseif _va_list_kind(_aarch64)
 // ARM Procedure Call Standard for aarch64. (IHI0055B)
 // The va_list type may refer to any parameter in a parameter list may be in one
 // of three memory locations depending on its type and position in the argument
@@ -109,7 +109,7 @@ internal let _fpRegisterWords = 16 /  MemoryLayout<Int>.size
 internal let _registerSaveWords = _countGPRegisters + (_countFPRegisters * _fpRegisterWords)
 #endif
 
-#if arch(s390x)
+#if _va_list_kind(_systemZ)
 @usableFromInline
 internal typealias _VAUInt = CUnsignedLongLong
 @usableFromInline
@@ -419,7 +419,7 @@ extension Float80 : CVarArg, _CVarArgAligned {
 }
 #endif
 
-#if arch(x86_64) || arch(s390x)
+#if _va_list_kind(_x86_64) || _va_list_kind(_systemZ)
 
 /// An object that can manage the lifetime of storage backing a
 /// `CVaListPointer`.
@@ -470,7 +470,7 @@ final internal class __VaListBuilder {
   internal func append(_ arg: CVarArg) {
     var encoded = arg._cVarArgEncoding
 
-#if arch(x86_64)
+#if _va_list_kind(_x86_64)
     let isDouble = arg is _CVarArgPassedAsDouble
 
     if isDouble && fpRegistersUsed < _countFPRegisters {
@@ -493,7 +493,7 @@ final internal class __VaListBuilder {
         storage.append(w)
       }
     }
-#elseif arch(s390x)
+#elseif _va_list_kind(_systemZ)
     if gpRegistersUsed < _countGPRegisters {
       for w in encoded {
         storage[gpRegistersUsed] = w
@@ -518,7 +518,7 @@ final internal class __VaListBuilder {
                Builtin.addressof(&self.header)))
   }
 }
-#elseif arch(arm64) && os(Linux)
+#elseif _va_list_kind(_aarch64)
 
 // NOTE: older runtimes called this _VaListBuilder. The two must
 // coexist, so it was renamed. The old name must not be used in the new

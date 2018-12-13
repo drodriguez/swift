@@ -19,6 +19,7 @@
 #include "swift/Basic/Platform.h"
 #include "swift/Basic/Range.h"
 #include "swift/Config.h"
+#include "clang/Basic/TargetInfo.h"
 #include "llvm/ADT/Hashing.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/Support/raw_ostream.h"
@@ -65,6 +66,17 @@ static const StringRef SupportedConditionalCompilationTargetEnvironments[] = {
   "simulator",
 };
 
+static const StringRef SupportedConditionalCompilationVariableArgumentLists[] = {
+  "_charPtr",
+  "_voidPtr",
+  "_aarch64",
+  "_pnacl",
+  "_power",
+  "_x86_64",
+  "_aapcs",
+  "_systemZ",
+};
+
 template <size_t N>
 bool contains(const StringRef (&Array)[N], const StringRef &V,
               std::vector<StringRef> &suggestions) {
@@ -106,6 +118,9 @@ checkPlatformConditionSupported(PlatformConditionKind Kind, StringRef Value,
                     suggestions);
   case PlatformConditionKind::TargetEnvironment:
     return contains(SupportedConditionalCompilationTargetEnvironments, Value,
+                    suggestions);
+  case PlatformConditionKind::VariableArgumentList:
+    return contains(SupportedConditionalCompilationVariableArgumentLists, Value,
                     suggestions);
   case PlatformConditionKind::CanImport:
     // All importable names are valid.
@@ -268,6 +283,35 @@ std::pair<bool, bool> LangOptions::setTarget(llvm::Triple triple) {
   if (swift::tripleIsAnySimulator(Target))
     addPlatformConditionValue(PlatformConditionKind::TargetEnvironment,
                               "simulator");
+
+  // Set the "_va_list_kind" platform condition.
+  clang::TargetInfo *TargetInfo = NULL; // TODO: how?
+  switch (TargetInfo->getBuiltinVaListKind()) {
+    case clang::TargetInfo::CharPtrBuiltinVaList:
+      addPlatformConditionValue(PlatformConditionKind::VariableArgumentList, "_charPtr");
+      break;
+    case clang::TargetInfo::VoidPtrBuiltinVaList:
+      addPlatformConditionValue(PlatformConditionKind::VariableArgumentList, "_voidPtr");
+      break;
+    case clang::TargetInfo::AArch64ABIBuiltinVaList:
+      addPlatformConditionValue(PlatformConditionKind::VariableArgumentList, "_aarch64");
+      break;
+    case clang::TargetInfo::PNaClABIBuiltinVaList:
+      addPlatformConditionValue(PlatformConditionKind::VariableArgumentList, "_pnacl");
+      break;
+    case clang::TargetInfo::PowerABIBuiltinVaList:
+      addPlatformConditionValue(PlatformConditionKind::VariableArgumentList, "_power");
+      break;
+    case clang::TargetInfo::X86_64ABIBuiltinVaList:
+      addPlatformConditionValue(PlatformConditionKind::VariableArgumentList, "_x86_64");
+      break;
+    case clang::TargetInfo::AAPCSABIBuiltinVaList:
+      addPlatformConditionValue(PlatformConditionKind::VariableArgumentList, "_aapcs");
+      break;
+    case clang::TargetInfo::SystemZBuiltinVaList:
+      addPlatformConditionValue(PlatformConditionKind::VariableArgumentList, "_systemZ");
+      break;
+  }
 
   // If you add anything to this list, change the default size of
   // PlatformConditionValues to not require an extra allocation
