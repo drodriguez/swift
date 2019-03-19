@@ -145,6 +145,9 @@ def capture(command, stderr=None, env=None, dry_run=None, echo=True,
             "': " + e.strerror)
 
 
+def xcrun_show_sdk_path(sdk_name):
+    return capture(['xcrun', '--sdk', sdk_name, '--show-sdk-path'])
+
 @contextmanager
 def pushd(path, dry_run=None, echo=True):
     dry_run = _coerce_dry_run(dry_run)

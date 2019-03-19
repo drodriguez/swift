@@ -341,6 +341,8 @@ def create_argument_parser():
            help='the path to install debug symbols into')
     option('--install-destdir', store_path,
            help='the path to use as the filesystem root for the installation')
+    option('--build-toolchain-only', toggle_true,
+           help='Only build the necessary tools to build an external toolchain')
 
     option(['-j', '--jobs'], store_int('build_jobs'),
            default=multiprocessing.cpu_count(),
@@ -568,11 +570,24 @@ def create_argument_parser():
     option(['--build-libparser-only'], store_true('build_libparser_only'),
            help='build only libParser for SwiftSyntax')
 
+    option('--build-llvm', toggle_false('clean_llvm'),
+           default=False,
+           help='If set to false, cleans the LLVM build result.')
+
+    option('--skip-build-llvm', store_false('build_llvm'),
+           help='Skip building LLVM/Clang')
+
+    option('--skip-build-compiler-rt', store_false('build_compiler_rt'),
+           help='Skip building Compiler-RT')
+
     # -------------------------------------------------------------------------
     in_group('Extra actions to perform before or in addition to building')
 
     option(['-c', '--clean'], store_true,
            help='do a clean build')
+
+    option('--reconfigure', store_true,
+           help='force a CMake configuration run even if CMakeCache.txt already exists')
 
     option('--export-compile-commands', toggle_true,
            help='generate compilation databases in addition to building')
@@ -923,6 +938,10 @@ def create_argument_parser():
     option('--llvm-targets-to-build', store,
            default='X86;ARM;AArch64;PowerPC;SystemZ;Mips',
            help='LLVM target generators to build')
+
+    option('--llvm-include-tests', toggle_true,
+           default=True,
+           help='Generate testing targets for LLVM. Set to true by default.')
 
     # -------------------------------------------------------------------------
     in_group('Build settings for Android')

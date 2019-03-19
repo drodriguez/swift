@@ -141,6 +141,9 @@ class BuildScriptImplHelper(object):
                 pipes.quote(arg) for arg in cmake.build_args()),
         ]
 
+        if args.reconfigure:
+            impl_args += ['--reconfigure']
+
         # Compute any product specific cmake arguments.
         for product_class in self.__product_classes:
             if not product_class.is_build_script_impl_product():
@@ -183,6 +186,8 @@ class BuildScriptImplHelper(object):
         if args.cross_compile_hosts:
             impl_args += [
                 "--cross-compile-hosts", " ".join(args.cross_compile_hosts)]
+        if args.build_toolchain_only:
+            impl_args += ['--build-toolchain-only']
 
         if args.test_paths:
             impl_args += ["--test-paths", " ".join(args.test_paths)]
@@ -227,7 +232,6 @@ class BuildScriptImplHelper(object):
 
         if args.skip_build:
             impl_args += ["--skip-build-cmark",
-                          "--skip-build-llvm",
                           "--skip-build-swift"]
         if not args.build_benchmarks:
             impl_args += ["--skip-build-benchmarks"]
@@ -238,6 +242,11 @@ class BuildScriptImplHelper(object):
             impl_args += ["--skip-build-foundation"]
         if not args.build_xctest:
             impl_args += ["--skip-build-xctest"]
+        if not args.build_llvm:
+            impl_args += ['--skip-build-llvm']
+        impl_args += ['--build-llvm=%s' % args.clean_llvm]
+        if not args.build_compiler_rt:
+            impl_args += ["--skip-build-compiler-rt"]
         if not args.build_lldb:
             impl_args += ["--skip-build-lldb"]
         if not args.build_llbuild:
@@ -424,6 +433,8 @@ class BuildScriptImplHelper(object):
                 "--clang-profile-instr-use=%s" %
                 os.path.abspath(args.clang_profile_instr_use)
             ]
+
+        impl_args += ['--llvm-include-tests=%s' % args.llvm_include_tests]
 
         if args.lit_args:
             impl_args += ["--llvm-lit-args=%s" % args.lit_args]
