@@ -10,11 +10,21 @@
 #
 # ----------------------------------------------------------------------------
 
-from . import product
+from . import cmark, libdispatch, libicu, lldb, llvm, product
 from ..cmake import CMakeOptions
+from ..host_specific_configuration import HostSpecificConfiguration
+
+import os
+import os.path
+import platform
+import re
 
 
 class Swift(product.Product):
+
+    @classmethod
+    def make_builder(cls, args, toolchain, workspace, host):
+        return SwiftBuilder(args, toolchain, workspace, host)
 
     def __init__(self, args, toolchain, source_dir, build_dir):
         product.Product.__init__(self, args, toolchain, source_dir,
@@ -112,3 +122,490 @@ updated without updating swift.py?")
     def _stdlibcore_exclusivity_checking_flags(self):
         return [('SWIFT_STDLIB_ENABLE_STDLIBCORE_EXCLUSIVITY_CHECKING:BOOL',
                  self.args.enable_stdlibcore_exclusivity_checking)]
+
+
+class SwiftHostVariantTripleMixin(object):
+    def __init__(self, host):
+        self.__host = host
+
+    @property
+    def _swift_host_variant_triple(self):
+        triples = {
+            'freebsd-x86_64': ('freebsd', 'FREEBSD', 'x86_64'),
+            'cygwin-x86_64': ('cygwin', 'CYGWIN', 'x86_64'),
+            'haiku-x86_64': ('haiku', 'HAIKU', 'x86_64'),
+            'linux-x86_64': ('linux', 'LINUX', 'x86_64'),
+            'linux-i686': ('linux', 'LINUX', 'i686'),
+            'linux-armv6': ('linux', 'LINUX', 'armv6'),
+            'linux-armv7': ('linux', 'LINUX', 'armv7'),
+            'linux-aarch64': ('linux', 'LINUX', 'aarch64'),
+            'linux-powerpc64': ('linux', 'LINUX', 'powerpc64'),
+            'linux-powerpc64le': ('linux', 'LINUX', 'powerpc64le'),
+            'linux-s390x': ('linux', 'LINUX', 's390x'),
+            'macosx-x86_64': ('macosx', 'OSX', 'x86_64'),
+            'iphonesimulator-i386':
+                ('iphonesimulator', 'IOS_SIMULATOR', 'i386'),
+            'iphonesimulator-x86_64':
+                ('iphonesimulator', 'IOS_SIMULATOR', 'x86_64'),
+            'iphoneos-armv7': ('iphoneos', 'IOS', 'armv7'),
+            'iphoneos-armv7s': ('iphoneos', 'IOS', 'armv7s'),
+            'iphoneos-arm64': ('iphoneos', 'IOS', 'arm64'),
+            'appletvsimulator-x86_64':
+                ('appletvsimulator', 'TVOS_SIMULATOR', 'x86_64'),
+            'appletv-arm64': ('appletv', 'TVOS', 'arm64'),
+            'watchsimulator-i386':
+                ('watchsimulator', 'WATCHOS_SIMULATOR', 'i386'),
+            'watchos-armv7k': ('watchos', 'WATCHOS', 'armv7k'),
+            'windows-x86_64': ('windows', 'WINDOWS', 'x86_64'),
+        }
+
+        if self.__host.name in triples:
+            return triples[self.__host.name]
+        else:
+            return None
+
+
+class SwiftBuilder(llvm.LLVMBase, SwiftHostVariantTripleMixin):
+    def __init__(self, product_class, args, toolchain, workspace, host):
+        product.CMakeProductBuilder.__init__(
+            self, Swift, args, toolchain, workspace, host)
+        SwiftHostVariantTripleMixin.__init__(self, host)
+
+        self.__host_config = HostSpecificConfiguration(host.name, args)
+
+        if self._args.build_android:
+            self._cmake_options.extend(
+                ('SWIFT_ANDROID_NDK_PATH:STRING', self._args.android_ndk),
+                ('SWIFT_ANDROID_NDK_GCC_VERSION:STRING',
+                 self._args.android_ndk_gcc_version),
+                ('SWIFT_ANDROID_API_LEVEL:STRING',
+                 self._args.android_api_level)
+                ('SWIFT_ANDROID_DEPLOY_DEVICE_PATH:PATH',
+                 self._args.android_deploy_device_path),
+                ('SWIFT_SDK_ANDROID_ARCHITECTURES:STRING',
+                 self._args.android_arch))
+            self.__define_icu_cmake_options(
+                'ANDROID', self._args.android_arch,
+                icu_uc_path=self._args.icu_uc_path,
+                icu_uc_include_path=self._args.icu_uc_include_path,
+                icu_i18n_path=self._args.icu_i18n_path,
+                icu_i18n_include_path=self._args.icu_i18n_include_path,
+                icu_data_path=self._args.icu_data_path)
+
+        if self._args.darwin_overlay_target:
+            host_target = targets.StdlibDeploymentTarget.get_target_for_name(
+                self._args.host_target)
+            # TODO: find-overlay-closure.sh needs to be converted into Python
+            overlay_target_closure = shell.capture(
+                [os.path.join(
+                    self._source_dir, 'utils',
+                    'find-overlay-deps-closure.sh'),
+                 self._args.darwin_overlay_target, host_target.arch,
+                 host_target.platform.name])
+            self._cmake_options.define(
+                'SWIFT_OVERLAY_TARGETS:STRING', overlay_target_closure)
+
+        llvm_builder = llvm.LLVMBuilder(
+            self._args, self._toolchain, self._workspace, self._host)
+
+        native_llvm_tools_path = None
+        native_clang_tools_path = None
+        native_swift_tools_path = None
+        if self._is_cross_tools_host:
+            # Don't build benchmarks and tests when building cross compiler.
+            self.__build_perf_testsuite_this_time = False
+            build_external_perf_testsuite_this_time = False
+            build_tests_this_time = False
+
+            native_llvm_tools_path = llvm_builder.tools_path
+            native_clang_tools_path = llvm_builder.tools_path
+            native_swift_tools_path = self.tools_path
+        else:
+            self.__build_perf_testsuite_this_time = self._args.build_benchmarks
+            build_external_perf_testsuite_this_time = \
+                self._args.build_external_benchmarks
+            build_tests_this_time = self._args.swift_include_tests
+            build_tests_this_time = True
+
+        # Command-line parameters override any autodetection that we
+        # might have done.
+        if self._args.native_llvm_tools_path:
+            native_llvm_tools_path = self._args.native_llvm_tools_path
+        if self._args.native_clang_tools_path:
+            native_clang_tools_path = self._args.native_clang_tools_path
+        if self._args.native_swift_tools_path:
+            native_swift_tools_path = self._args.native_swift_tools_path
+
+        if self._args.clean_llvm:
+            self._cmake_options.define(
+                'LLVM_TOOLS_BINARY_DIR:PATH',
+                os.path.join(os.path.sep, 'tmp', 'dummy'))
+
+        if self._toolchain.lipo:
+            self._cmake_options.define('SWIFT_LIPO:PATH', self._toolchain.lipo)
+
+        if 'SWIFT_ENABLE_RUNTIME_FUNCTION_COUNTERS' not in os.environ:
+            swift_enable_runtime_function_counters = \
+                self._args.swift_stdlib_assertions
+        else:
+            swift_enable_runtime_function_counters = (
+                os.environ['SWIFT_ENABLE_RUNTIME_FUNCTION_COUNTERS'].lower() ==
+                'true')
+
+        self._cmake_options.extend(
+            ('CMAKE_C_FLAGS', self.__cflags),
+            ('CMAKE_CXX_FLAGS', self.__cflags),
+            ('CMAKE_C_FLAGS_RELWITHDEBINFO', '-O2 -DNDEBUG'),
+            ('CMAKE_CXX_FLAGS_RELWITHDEBINFO', '-O2 -DNDEBUG'),
+            ('CMAKE_BUILD_TYPE:STRING', self._build_variant),
+            ('LLVM_ENABLE_ASSERTIONS:BOOL', self._args.swift_assertions),
+            ('SWIFT_ANALYZE_CODE_COVERAGE:STRING',
+             self._args.swift_analyze_code_coverage.upper()),
+            ('SWIFT_STDLIB_BUILD_TYPE:STRING',
+             self._args.swift_stdlib_build_variant),
+            ('SWIFT_STDLIB_ASSERTIONS:BOOL',
+             self._args.swift_stdlib_assertions),
+            ('SWIFT_STDLIB_USE_NONATOMIC_RC:BOOL',
+             self._args.swift_stdlib_use_nonatomic_rc),
+            ('SWIFT_ENABLE_RUNTIME_FUNCTION_COUNTERS:BOOL',
+             swift_enable_runtime_function_counters),
+            ('SWIFT_NATIVE_LLVM_TOOLS_PATH:STRING', native_llvm_tools_path),
+            ('SWIFT_NATIVE_CLANG_TOOLS_PATH:STRING', native_clang_tools_path),
+            ('SWIFT_NATIVE_SWIFT_TOOLS_PATH:STRING', native_swift_tools_path),
+            ('SWIFT_INCLUDE_TOOLS:BOOL', self._args.build_swift_tools),
+            ('SWIFT_BUILD_REMOTE_MIRROR:BOOL', self._args.build_remote_mirror),
+            ('SWIFT_STDLIB_SIL_DEBUGGING:BOOL',
+             self._args.build_sil_debugging_stdlib),
+            ('SWIFT_CHECK_INCREMENTAL_COMPILATION:BOOL',
+             self._args.check_incremental_compilation),
+            ('SWIFT_REPORT_STATISTICS:BOOL', self._args.report_statistics),
+            ('SWIFT_BUILD_DYNAMIC_STDLIB:BOOL',
+             self._args.build_swift_dynamic_stdlib),
+            ('SWIFT_BUILD_STATIC_STDLIB:BOOL',
+             self._args.build_swift_static_stdlib),
+            ('SWIFT_BUILD_DYNAMIC_SDK_OVERLAY:BOOL',
+             self._args.build_swift_dynamic_sdk_overlay),
+            ('SWIFT_BUILD_STATIC_SDK_OVERLAY:BOOL',
+             self._args.build_swift_static_stdlib),
+            ('SWIFT_BUILD_PERF_TESTSUITE:BOOL',
+             self.__build_perf_testsuite_this_time),
+            ('SWIFT_BUILD_EXTERNAL_PERF_TESTSUITE:BOOL',
+             build_external_perf_testsuite_this_time),
+            ('SWIFT_BUILD_EXAMPLES:BOOL', self._args.build_swift_examples),
+            ('SWIFT_INCLUDE_TESTS:BOOL', build_tests_this_time),
+            # FIXME: SWIFT_EMBED_BITCODE_SECTION seems unused
+            ('SWIFT_EMBED_BITCODE_SECTION:BOOL',
+             self._args.embed_bitcode_section),
+            ('SWIFT_TOOLS_ENABLE_LTO:STRING', self._args.lto_type),
+            ('SWIFT_BUILD_RUNTIME_WITH_HOST_COMPILER:BOOL',
+             self._args.build_runtime_with_host_compiler),
+            ('LIBDISPATCH_CMAKE_BUILD_TYPE:STRING',
+             self._args.libdispatch_build_variant))
+
+        if self._host.platform.is_darwin:
+            if self._is_swift_lto_enabled:
+                if self._cmake_needs_to_specify_standard_computed_defaults:
+                    self._cmake_options.extend(
+                        ('CMAKE_C_STANDARD_COMPUTED_DEFAULT', 'AppleClang')
+                        ('CMAKE_CXX_STANDARD_COMPUTED_DEFAULT', 'AppleClang'))
+                self._cmake_options.extend(
+                    ('LLVM_ENABLE_MODULE_DEBUGGING:BOOL', False),
+                    ('SWIFT_PARALLEL_LINK_JOBS',
+                     min(self._args.swift_tools_max_parallel_lto_link_jobs,
+                         self._args.build_jobs)))
+            self._cmake_options.extend(
+                ('SWIFT_DARWIN_DEPLOYMENT_VERSION_OSX',
+                 self._args.darwin_deployment_version_osx),
+                ('SWIFT_DARWIN_DEPLOYMENT_VERSION_IOS',
+                 self._args.darwin_deployment_version_ios),
+                ('SWIFT_DARWIN_DEPLOYMENT_VERSION_TVOS',
+                 self._args.darwin_deployment_version_tvos),
+                ('SWIFT_DARWIN_DEPLOYMENT_VERSION_WATCHOS',
+                 self._args.darwin_deployment_version_watchos))
+
+        host_triple = self._swift_host_triple
+        if host_triple:
+            self._cmake_options.define('SWIFT_HOST_TRIPLE:STRING', host_triple)
+
+        (swift_host_variant,
+         swift_host_variant_sdk,
+         swift_host_variant_arch) = self._swift_host_variant_triple
+
+        self._cmake_options.extend(
+            ('SWIFT_HOST_VARIANT', swift_host_variant),
+            ('SWIFT_HOST_VARIANT_SDK', swift_host_variant_sdk),
+            ('SWIFT_HOST_VARIANT_ARCH', swift_host_variant_arch))
+
+        if self._args.lit_args:
+            self._cmake_options.define('LLVM_LIT_ARGS', self._args.lit_args)
+
+        # TODO: build-script-impl defines --swift-profile-instr-use but nobody
+        # uses it
+        # if self._args.swift_profile_instr_use:
+        #     self._cmake_options.define(
+        #         'SWIFT_PROFDATA_FILE', self._args.swift_profile_instr_use)
+
+        if args.coverage_db:
+            self._cmake_options.define(
+                'COVERAGE_DB', os.path.abspath(self._args.coverage_db))
+
+        if self._args.darwin_toolchain_version:
+            self._cmake_options.define(
+                'DARWIN_TOOLCHAIN_VERSION',
+                self._args.darwin_toolchain_version)
+
+        if self._args.enable_asan or platform.system() == 'Linux':
+            self._cmake_options.define(
+                'SWIFT_SOURCEKIT_USE_INPROC_LIBRARY:BOOL', True)
+
+        if self._args.darwin_crash_reporter_client:
+            self._cmake_options.define(
+                'SWIFT_RUNTIME_CRASH_REPORTER_CLIENT:BOOL', True)
+
+        self._cmake_options.define(
+            'SWIFT_DARWIN_XCRUN_TOOLCHAIN:STRING',
+            self._args.darwin_xcrun_toolchain)
+
+        # TODO: build-script-impl defines --darwin-stdlib-install-name-dir but
+        # it is not used
+        # if self._args.darwin_stdlib_install_name_dir:
+        #     self._cmake_options.define(
+        #         'SWIFT_DARWIN_STDLIB_INSTALL_NAME_DIR:STRING',
+        #         self._args.darwin_stdlib_install_name_dir)
+
+        if self._args.extra_swift_args:
+            self._cmake_options.define(
+                'SWIFT_EXPERIMENTAL_EXTRA_REGEXP_FLAGS',
+                self._args.extra_swift_args)
+
+        self._cmake_options.define(
+            'SWIFT_AST_VERIFIER:BOOL', self._args.swift_enable_ast_verifier)
+        self._cmake_options.define(
+            'SWIFT_SIL_VERIFY_ALL:BOOL', self._args.sil_verify_all)
+        self._cmake_options.define(
+            'SWIFT_RUNTIME_ENABLE_LEAK_CHECKER:BOOL',
+            self._args.swift_runtime_enable_leak_checker)
+
+        if self._args.test_paths:
+            test_paths = [os.path.join(self._build_dir,
+                                       re.sub(r'^(validation-test|test)',
+                                              r'\1-{}'.format(self._host.name),
+                                              path))
+                          for path in self._args.test_paths]
+            self._cmake_options.define(
+                'SWIFT_LIT_TEST_PATHS', ";".join(test_paths))
+
+        # TODO: build-script-impl defines --skip-test-sourcekit
+        # if self._args.skip_test_sourcekit:
+        #     self._cmake_options.define(
+        #         'SWIFT_ENABLE_SOURCEKIT_TESTS:BOOL', False)
+
+        if self._args.build_toolchain_only:
+            self._cmake_options.define('SWIFT_TOOL_SIL_OPT_BUILD:BOOL', False)
+            self._cmake_options.define(
+                'SWIFT_TOOL_SWIFT_IDE_TEST_BUILD:BOOL', False)
+            self._cmake_options.define(
+                'SWIFT_TOOL_SWIFT_REMOTEAST_TEST_BUILD:BOOL', False)
+            self._cmake_options.define(
+                'SWIFT_TOOL_LLDB_MODULEIMPORT_TEST_BUILD', False)
+            self._cmake_options.define(
+                'SWIFT_TOOL_SIL_EXTRACT_BUILD:BOOL', False)
+            self._cmake_options.define(
+                'SWIFT_TOOL_SWIFT_LLVM_OPT_BUILD:BOOL', False)
+            self._cmake_options.define(
+                'SWIFT_TOOL_SWIFT_SDK_ANALYZER_BUILD:BOOL', False)
+            self._cmake_options.define(
+                'SWIFT_TOOL_SWIFT_SDK_DIGESTER_BUILD:BOOL', False)
+            self._cmake_options.define(
+                'SWIFT_TOOL_SOURCEKITD_TEST_BUILD:BOOL', False)
+            self._cmake_options.define(
+                'SWIFT_TOOL_SOURCEKITD_REPL_BUILD:BOOL', False)
+            self._cmake_options.define(
+                'SWIFT_TOOL_COMPLETE_TEST_BUILD:BOOL', False)
+            self._cmake_options.define(
+                'SWIFT_TOOL_SWIFT_REFLECTION_DUMP_BUILD:BOOL', False)
+
+        llvm_build_dir = self._workspace.build_dir(
+            self._host.name, llvm.LLVM.product_name())
+
+        self._cmake_options.define(
+            'CMAKE_INSTALL_PREFIX:PATH', self._host_install_prefix)
+        self._cmake_options.define(
+            'Clang_DIR:PATH',
+            os.path.join(llvm_build_dir, 'lib', 'cmake', 'clang'))
+        self._cmake_options.define(
+            'LLVM_DIR:PATH',
+            os.path.join(llvm_build_dir, 'lib', 'cmake', 'llvm'))
+        # FIXME: Clang doesn't have a product because it builds from LLVM, but
+        # having the raw source directory name there is wrong.
+        self._cmake_options.define(
+            'SWIFT_PATH_TO_CMARK_SOURCE:PATH',
+            self._workspace.source_dir(cmark.CMark.product_source_name()))
+        self._cmake_options.define(
+            'SWIFT_PATH_TO_CMARK_BUILD:PATH',
+            self._workspace.build_dir(
+                self._host.name, cmark.CMark.product_name()))
+        self._cmake_options.define(
+            'SWIFT_PATH_TO_LIBDISPATCH_SOURCE:PATH',
+            self._workspace.source_dir(
+                libdispatch.LibDispatch.product_source_name()))
+
+        if self._args.build_libicu:
+            libicu_build_dir = self._workspace.build_dir(
+                self._host.name, libicu.LibICU.product_name())
+            icu_tmpinstall = os.path.join(libicu_build_dir, 'tmp_install')
+            self._cmake_options.define(
+                'SWIFT_PATH_TO_LIBICU_SOURCE:PATH',
+                self._workspace.source_dir(
+                    libicu.LibICU.product_source_name()))
+            self._cmake_options.define(
+                'SWIFT_PATH_TO_LIBICU_BUILD:PATH',
+                libicu_build_dir)
+            self.__define_icu_cmake_options(
+                swift_host_variant_sdk, swift_host_variant_arch,
+                icu_uc_include_path=os.path.join(icu_tmpinstall, 'include'),
+                icu_i18n_include_path=os.path.join(icu_tmpinstall, 'include'))
+            self._cmake_options.define(
+                'SWIFT_{}_{}_ICU_STATICLIB:BOOL'.format(
+                    swift_host_variant_sdk, swift_host_variant_arch),
+                True)
+
+        if self._args.cmake_generator == 'Xcode':
+            self._cmake_options.define(
+                'SWIFT_CMARK_LIBRARY_DIR:PATH',
+                os.path.join(
+                    self._workspace.build_dir(
+                        self._host.name, cmark.CMark.product_name()),
+                    'src', self._args.cmark_build_variant))
+        else:
+            self._cmake_options.define(
+                'SWIFT_CMARK_LIBRARY_DIR:PATH',
+                os.path.join(
+                    self._workspace.build_dir(
+                        self._host.name, cmark.CMark.product_name()),
+                    'src'))
+
+        swift_sdks = self.__host_config.sdks_to_configure
+        if swift_sdks:
+            self._cmake_options.define(
+                'SWIFT_SDKS:STRING', ";".join(swift_sdks))
+
+        if self._args.swift_primary_variant_sdk:
+            self._cmake_options.define(
+                'SWIFT_PRIMARY_VARIANT_SDK:STRING',
+                self._args.swift_primary_variant_sdk)
+            self._cmake_options.define(
+                'SWIFT_PRIMARY_VARIANT_ARCH:STRING',
+                self._args.swift_primary_variant_arch)
+
+        if self._args.swift_install_components:
+            self._cmake_options.define(
+                'SWIFT_INSTALL_COMPONENTS:STRING',
+                self._args.swift_install_components)
+
+        if self._args.build_lldb:
+            lldb_build_dir = self._workspace.build_dir(
+                self._host.name, lldb.LLDB.product_name())
+            self._cmake_options.define('LLDB_ENABLE:BOOL', True)
+            self._cmake_options.define('LLDB_BUILD_DIR:STRING', lldb_build_dir)
+
+        if self.__build_perf_testsuite_this_time:
+            native_swift_tools_path = os.path.join(
+                self._workspace.build_dir(
+                    self._args.host_target, Swift.product_name()),
+                'bin')
+            self._cmake_options.define(
+                'SWIFT_EXEC:STRING',
+                os.path.join(native_swift_tools_path, 'swiftc'))
+
+        if self._args.build_libparser_only:
+            # TODO: build-script-impl defines --libparser-ver
+            # self._cmake_options.define(
+            #     'SWIFT_LIBPARSER_VER:STRING', self._args.libparser_ver)
+            pass
+
+    @property
+    def tools_path(self):
+        return os.path.join(self._build_dir, 'bin')
+
+    @property
+    def _build_targets(self):
+        if self._args.build_libparser_only:
+            return ['libSwiftSyntaxParser']
+
+        build_targets = ['all'] + self.__host_config.swift_stdlib_build_targets
+        if self.__build_perf_testsuite_this_time:
+            build_targets += self.__host_config.swift_benchmark_build_targets
+            pass
+        return build_targets
+
+    @property
+    def _build_variant(self):
+        return self._args.swift_build_variant
+
+    @property
+    def _should_test(self):
+        return self._args.test or \
+            self._args.long_test or \
+            self._args.stress_test
+
+    @property
+    def _test_executable_target(self):
+        return 'SwiftUnitTests'
+
+    @property
+    def _test_results_targets(self):
+        test_targets = self.__host_config.swift_test_run_targets
+        # TODO: build-script-impl defines --stress-test-sourcekit
+        # if self._args.stress_test_sourcekit:
+        #     targets.append('stress-SourceKit')
+        if not self._args.benchmark:
+            test_targets += self.__host_config.swift_benchmark_run_targets
+        if self._args.test_paths:
+            test_targets = ["{}-custom".format(t)
+                            if t.startswith('check-swift') else t
+                            for t in test_targets]
+        return test_targets
+
+    @property
+    def __cflags(self):
+        # Don't pass common_cross_c_flags to Swift because CMake code in the
+        # Swift project is itself aware of cross-compilation for the host tools
+        # and standard library.
+        # No need to for equivalents in MSVC, before compiling Swift, we will
+        # switch to clang-cl.exe.
+        cflags = ' -Wno-unknown-warning-option' \
+                 ' -Werror=unguarded-availability-new'
+
+        is_clang_cl = os.path.basename(self._toolchain.cc) == 'clang-cl.exe'
+
+        if self._is_release_build_variant:
+            cflags += ' -fno-stack-protector' if not is_clang_cl else ' /GS-'
+        if self._args.swift_stdlib_use_nonatomic_rc:
+            cflags += ' -DSWIFT_STDLIB_USE_NONATOMIC_RC'
+        if self._host.platform.name == 'windows':
+            cflags += ' -Wno-c++98-compat -Wno-c++98-compat-pedantic'
+        return cflags
+
+    def __define_icu_cmake_options(self, sdk, arch,
+                                   icu_uc_path=None, icu_uc_include_path=None,
+                                   icu_i18n_path=None,
+                                   icu_i18n_include_path=None,
+                                   icu_data_path=None):
+        if icu_uc_path is not None:
+            self._cmake_options.define(
+                'SWIFT_{}_{}_ICU_UC:STRING'.format(sdk, arch), icu_uc_path)
+        if icu_uc_include_path:
+            self._cmake_options.define(
+                'SWIFT_{}_{}_ICU_UC_INCLUDE:STRING'.format(sdk, arch),
+                icu_uc_include_path)
+        if icu_i18n_path:
+            self._cmake_options.define(
+                'SWIFT_{}_{}_ICU_I18N:STRING'.format(sdk, arch), icu_i18n_path)
+        if icu_i18n_include_path:
+            self._cmake_options.define(
+                'SWIFT_{}_{}_ICU_I18N_INCLUDE:STRING'.format(sdk, arch),
+                icu_i18n_include_path)
+        if icu_data_path:
+            self._cmake_options.define(
+                'SWIFT_{}_{}_ICU_DATA:STRING'.format(sdk, arch), icu_data_path)

@@ -293,20 +293,24 @@ class LLVMBuilder(LLVMBase):
         return self._build_dir
 
     @property
+    def tools_path(self):
+        return os.path.join(self._build_dir, 'bin')
+
+    @property
     def clang_path(self):
-        return os.path.join(self._build_dir, 'bin', 'clang')
+        return os.path.join(self.tools_path, 'clang')
 
     @property
     def clangpp_path(self):
-        return os.path.join(self._build_dir, 'bin', 'clang++')
+        return os.path.join(self.tools_path, 'clang++')
 
     @property
     def llvm_tblgen_path(self):
-        return os.path.join(self._build_dir, 'bin', 'llvm-tblgen')
+        return os.path.join(self.tools_path, 'llvm-tblgen')
 
     @property
     def clang_tblgen_path(self):
-        return os.path.join(self._build_dir, 'bin', 'clang-tblgen')
+        return os.path.join(self.tools_path, 'clang-tblgen')
 
     @property
     def _build_targets(self):

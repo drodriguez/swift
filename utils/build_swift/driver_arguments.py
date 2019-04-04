@@ -432,6 +432,9 @@ def create_argument_parser():
            default=defaults.DARWIN_DEPLOYMENT_VERSION_WATCHOS,
            metavar='MAJOR.MINOR',
            help='minimum deployment target version for watchOS')
+    option('--darwin-overlay-target', store,
+           help='Single overlay target to build, dependencies are computed '
+                'later.')
 
     option('--extra-cmake-options', append,
            type=argparse.ShellSplitType(),
@@ -520,6 +523,13 @@ def create_argument_parser():
            help='A space-separated list that filters which of the configured '
                 'targets to build the Swift standard library for, or "all".')
 
+    option('--native-llvm-tools-path', store,
+           help='Directory that contains LLVM tools that are executable on the build machine.')
+    option('--native-clang-tools-path', store,
+           help='Directory that contains Clang tools that are executable on the build machine.')
+    option('--native-swift-tools-path', store,
+           help='Directory that contains Swift tools that are executable on the build machine.')
+
     # -------------------------------------------------------------------------
     in_group('Options to select projects')
 
@@ -573,6 +583,10 @@ def create_argument_parser():
     option('--build-llvm', toggle_false('clean_llvm'),
            default=False,
            help='If set to false, cleans the LLVM build result.')
+
+    option('--build-swift-remote-mirror', toggle_true,
+           default=True,
+           help='Build the Swift Remote Mirror library')
 
     option('--skip-build-llvm', store_false('build_llvm'),
            help='Skip building LLVM/Clang')
@@ -942,6 +956,16 @@ def create_argument_parser():
     option('--llvm-include-tests', toggle_true,
            default=True,
            help='Generate testing targets for LLVM. Set to true by default.')
+
+    # -------------------------------------------------------------------------
+    in_group('Build settings specific for Swift')
+
+    option('--report-statistics', toggle_true,
+           help='Generate compilation statistics files for Swift libraries.')
+    option('--embed-bitcode-section', toggle_true,
+           default=False,
+           help='Embed a LLVM bitcode section in stdlib/overlay binaries for '
+                'supported platforms')
 
     # -------------------------------------------------------------------------
     in_group('Build settings for Android')
