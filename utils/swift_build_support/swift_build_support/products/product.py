@@ -11,6 +11,7 @@
 # ----------------------------------------------------------------------------
 
 from .build_script_impl_builder import BuildScriptImplBuilder
+from .. import cmake
 
 
 class Product(object):
@@ -49,4 +50,4 @@ class Product(object):
         self.toolchain = toolchain
         self.source_dir = source_dir
         self.build_dir = build_dir
-        self.cmake_options = []
+        self.cmake_options = cmake.CMakeOptions()
