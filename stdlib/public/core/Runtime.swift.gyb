@@ -150,10 +150,12 @@ internal struct _Buffer72 {
   }
 }
 
-% for bits in [ 32, 64, 80 ]:
+% for bits in [ 32, 64, 80, 128 ]:
 
 % if bits == 80:
 #if !(os(Windows) || os(Android)) && (arch(i386) || arch(x86_64))
+% elif bits == 128:
+#if arch(arm64) && !(os(macOS) || os(iOS) || os(tvOS) || os(watchOS) || os(Windows))
 % end
 
 // Returns a UInt64, but that value is the length of the string, so it's
@@ -178,7 +180,7 @@ internal func _float${bits}ToString(
   return (buffer, length)
 }
 
-% if bits == 80:
+% if (bits == 80) or (bits == 128):
 #endif
 % end
 

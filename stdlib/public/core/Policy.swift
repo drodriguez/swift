@@ -109,6 +109,8 @@ public typealias StringLiteralType = String
 //===----------------------------------------------------------------------===//
 #if !os(Windows) && (arch(i386) || arch(x86_64))
 public typealias _MaxBuiltinFloatType = Builtin.FPIEEE80
+#elseif arch(arm64) && !(os(macOS) || os(iOS) || os(tvOS) || os(watchOS) || os(Windows))
+public typealias _MaxBuiltinFloatType = Builtin.FPIEEE128
 #else
 public typealias _MaxBuiltinFloatType = Builtin.FPIEEE64
 #endif

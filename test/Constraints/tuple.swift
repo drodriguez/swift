@@ -67,7 +67,7 @@ f2(f2ab)
 f2(f2yx)
 
 f3(f3a)
-f3(f3b) // expected-error{{cannot convert value of type '(Int) -> ()' to expected argument type '(Int, Int) -> ()'}} 
+f3(f3b) // expected-error{{cannot convert value of type '(Int) -> ()' to expected argument type '(Int, Int) -> ()'}}
 
 func getIntFloat() -> (int: Int, float: Float) {}
 var values = getIntFloat()

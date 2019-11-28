@@ -15,7 +15,7 @@
 /// Floating-point types are used to represent fractional numbers, like 5.5,
 /// 100.0, or 3.14159274. Each floating-point type has its own possible range
 /// and precision. The floating-point types in the standard library are
-/// `Float`, `Double`, and `Float80` where available.
+/// `Float`, `Double`, and `Float80` or `Float128` where available.
 ///
 /// Create new instances of floating-point types using integer or
 /// floating-point literals. For example:
@@ -1470,7 +1470,8 @@ extension FloatingPoint {
 /// The `BinaryFloatingPoint` protocol extends the `FloatingPoint` protocol
 /// with operations specific to floating-point binary types, as defined by the
 /// [IEEE 754 specification][spec]. `BinaryFloatingPoint` is implemented in
-/// the standard library by `Float`, `Double`, and `Float80` where available.
+/// the standard library by `Float`, `Double`, and `Float80` or `Float128` where
+/// available.
 ///
 /// [spec]: http://ieeexplore.ieee.org/servlet/opac?punumber=4610933
 public protocol BinaryFloatingPoint: FloatingPoint, ExpressibleByFloatLiteral {
@@ -1517,6 +1518,12 @@ public protocol BinaryFloatingPoint: FloatingPoint, ExpressibleByFloatLiteral {
   ///
   /// - Parameter value: A floating-point value to be converted.
   init(_ value: Float80)
+#elseif arch(arm64) && !(os(macOS) || os(iOS) || os(tvOS) || os(watchOS) || os(Windows))
+  /// Creates a new instance from the given value, rounded to the closest
+  /// possible representation.
+  ///
+  /// - Parameter value: A floating-point value to be converted.
+  init(_ value: Float128)
 #endif
 
   /// Creates a new instance from the given value, rounded to the closest
@@ -1987,7 +1994,7 @@ extension BinaryFloatingPoint where Self.RawSignificand: FixedWidthInteger {
       significandBitPattern: significand
     ), fraction == 0)
   }
-  
+
   /// Creates a new value, rounded to the closest possible representation.
   ///
   /// If two representable values are equally close, the result is the value
@@ -1998,7 +2005,7 @@ extension BinaryFloatingPoint where Self.RawSignificand: FixedWidthInteger {
   public init<Source: BinaryInteger>(_ value: Source) {
     self = Self._convert(from: value).value
   }
-  
+
   /// Creates a new value, if the given integer can be represented exactly.
   ///
   /// If the given integer cannot be represented exactly, the result is `nil`.
@@ -2111,7 +2118,7 @@ extension BinaryFloatingPoint where Self.RawSignificand: FixedWidthInteger {
     var g = SystemRandomNumberGenerator()
     return Self.random(in: range, using: &g)
   }
-  
+
   /// Returns a random value within the specified range, using the given
   /// generator as a source for randomness.
   ///
@@ -2181,7 +2188,7 @@ extension BinaryFloatingPoint where Self.RawSignificand: FixedWidthInteger {
     let randFloat = delta * unitRandom + range.lowerBound
     return randFloat
   }
-  
+
   /// Returns a random value within the specified range.
   ///
   /// Use this method to generate a floating-point value within a specific

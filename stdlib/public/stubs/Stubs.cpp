@@ -209,7 +209,7 @@ static int swift_snprintf_l(char *Str, size_t StrSize, locale_t Locale,
 
 template <typename T>
 static uint64_t swift_floatingPointToString(char *Buffer, size_t BufferLength,
-                                            T Value, const char *Format, 
+                                            T Value, const char *Format,
                                             bool Debug) {
   if (BufferLength < 32)
     swift::crash("swift_floatingPointToString: insufficient buffer size");
@@ -220,7 +220,7 @@ static uint64_t swift_floatingPointToString(char *Buffer, size_t BufferLength,
   }
 
 #if defined(__CYGWIN__) || defined(_WIN32) || defined(__HAIKU__)
-  // Cygwin does not support uselocale(), but we can use the locale feature 
+  // Cygwin does not support uselocale(), but we can use the locale feature
   // in stringstream object.
   std::ostringstream ValueStream;
   ValueStream.width(0);
@@ -286,6 +286,13 @@ uint64_t swift_float80ToString(char *Buffer, size_t BufferLength,
 
 }
 
+SWIFT_CC(swift) SWIFT_RUNTIME_STDLIB_API
+uint64_t swift_float128ToString(char *Buffer, size_t BufferLength,
+                                long double Value, bool Debug) {
+  // TODO
+  return swift_floatingPointToString<long double>(Buffer, BufferLength, Value,
+                                                  "%0.*Lg", Debug);
+}
 /// \param[out] LinePtr Replaced with the pointer to the malloc()-allocated
 /// line.  Can be NULL if no characters were read. This buffer should be
 /// freed by the caller.
@@ -358,7 +365,7 @@ static bool swift_stringIsSignalingNaN(const char *nptr) {
 }
 
 #if defined(__CYGWIN__) || defined(_WIN32) || defined(__HAIKU__)
-// Cygwin does not support uselocale(), but we can use the locale feature 
+// Cygwin does not support uselocale(), but we can use the locale feature
 // in stringstream object.
 template <typename T>
 static const char *_swift_stdlib_strtoX_clocale_impl(
@@ -367,7 +374,7 @@ static const char *_swift_stdlib_strtoX_clocale_impl(
     *outResult = std::numeric_limits<T>::signaling_NaN();
     return nptr + std::strlen(nptr);
   }
-  
+
   std::istringstream ValueStream(nptr);
   ValueStream.imbue(std::locale::classic());
   T ParsedValue;
@@ -469,7 +476,7 @@ static const char *_swift_stdlib_strtoX_clocale_impl(
     *outResult = std::numeric_limits<T>::signaling_NaN();
     return nptr + std::strlen(nptr);
   }
-  
+
   char *EndPtr;
   errno = 0;
   const auto result = posixImpl(nptr, &EndPtr, getCLocale());
@@ -480,7 +487,7 @@ static const char *_swift_stdlib_strtoX_clocale_impl(
   }
   return EndPtr;
 }
-    
+
 const char *swift::_swift_stdlib_strtold_clocale(
   const char * nptr, void *outResult) {
   return _swift_stdlib_strtoX_clocale_impl(
@@ -523,4 +530,3 @@ int swift::_swift_stdlib_putc_stderr(int C) {
 size_t swift::_swift_stdlib_getHardwareConcurrency() {
   return std::thread::hardware_concurrency();
 }
-

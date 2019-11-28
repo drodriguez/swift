@@ -1000,6 +1000,8 @@ IEEESemantics getFPSemantics(BuiltinFloatType *fpType) {
     return IEEESemantics(64, 11, 52, false);
   case BuiltinFloatType::IEEE80:
     return IEEESemantics(80, 15, 63, true);
+  case BuiltinFloatType::IEEE128:
+    return IEEESemantics(128, 15, 113, false);
   default:
     llvm_unreachable("Unexpected semantics");
   }
