@@ -12,12 +12,64 @@
 from __future__ import print_function
 
 import argparse
+import contextlib
+import os
 import re
 import subprocess
 import sys
+import tempfile
 
 
-def main():
+def comma_separated_argument_type(arg):
+    """
+    Split the input argument in every comma.
+
+    Intended to be used as the argument type of a argparse.ArgumentParser.
+    """
+    return arg.split(',')
+
+
+class ConcatAction(argparse.Action):
+    """
+    Concats the new values with the previous value of the argument. The standard
+    'append' would have created nested list, while this will create a flat list.
+
+    Intended to be used as the argument action of a argparse.ArgumentParser.
+    """
+
+    def __init__(self, option_strings, dest, **kwargs):
+        super(ConcatAction, self).__init__(option_strings, dest, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        value = getattr(namespace, self.dest, [])
+        setattr(namespace, self.dest, value + values)
+
+
+def parse_file_check_arguments(file_check_arguments):
+
+    def optional_argument(name):
+        return ['-%s' % name, '--%s' % name]
+
+    parser = argparse.ArgumentParser(prog='FileCheck', add_help=False)
+    parser.add_argument('check_file', metavar='check-file')
+    parser.add_argument(*optional_argument('input-file'), default='-', metavar='filename')
+    parser.add_argument(*optional_argument('check-prefix'), action='append', dest='check_prefixes', default=[], metavar='PREFIX')
+    parser.add_argument(*optional_argument('check-prefixes'), action=ConcatAction, dest='check_prefixes', metavar='PREFIXES', type=comma_separated_argument_type)
+    parser.add_argument(*optional_argument('strict-whitespace'), action='store_true')
+    parser.add_argument(*optional_argument('implicit-check-not'), action='append', metavar='pattern')
+    parser.add_argument('-D', action='append', metavar='VAR=VALUE')
+    parser.add_argument(*optional_argument('allow-empty'), action='store_true')
+    parser.add_argument(*optional_argument('match-full-lines'), action='store_true')
+    parser.add_argument(*optional_argument('enable-var-scope'), action='store_true')
+    parser.add_argument(*optional_argument('allow-deprecated-dag-overlap'), action='store_true')
+    parser.add_argument('-v', action='count', dest='verbose')
+    parser.add_argument(*optional_argument('dump-input-on-failure'), action='store_true', default=os.getenv('FILECHECK_DUMP_INPUT_ON_FAILURE'))
+    parser.add_argument(*optional_argument('dump-input'), metavar='mode', choices=['help', 'never', 'fail', 'always', 'default'], default='default')
+
+    return parser.parse_known_args(file_check_arguments)
+
+
+def parse_path_sanitizing_file_check_arguments(args=None):
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
@@ -62,39 +114,176 @@ constants.""")
              "to standard output",
         action="store_true")
 
-    args, unknown_args = parser.parse_known_args()
+    return parser.parse_known_args()
 
+
+def get_slashes_re(args):
+    """
+    The slashes pattern that would be use for every forward slash in the
+    sanitized replacements.
+    """
     if args.enable_windows_compatibility:
         if args.enable_yaml_compatibility:
-            slashes_re = r'(/|\\\\|\\\\\\\\)'
+            return r'(/|\\\\|\\\\\\\\)'
         else:
-            slashes_re = r'(/|\\\\)'
+            return r'(/|\\\\)'
     else:
-        slashes_re = r'/'
+        return r'/'
 
-    stdin = sys.stdin.read()
 
-    for s in args.sanitize_strings:
+def get_check_prefixes(check_prefixes):
+    if len(check_prefixes) == 0:
+        return ['CHECK']
+
+    return check_prefixes
+
+
+def sanitize_input(text, sanitize_strings, slashes_re):
+    for s in sanitize_strings:
         replacement, pattern = s.split('=', 1)
         # Since we want to use pattern as a regex in some platforms, we need
         # to escape it first, and then replace the escaped slash
         # literal (r'\\/') for our platform-dependent slash regex.
-        stdin = re.sub(re.sub(r'\\/', slashes_re, re.escape(pattern)),
+        text = re.sub(re.sub(r'\\/', slashes_re, re.escape(pattern)),
                        replacement,
-                       stdin)
+                       text)
+
+    return text
+
+
+def build_check_prefix_regex(check_prefixes):
+    # Sort length of prefixes to avoid partial matches of shorter prefixes.
+    return re.compile('|'.join(sorted(check_prefixes, lambda x, y: -cmp(len(x), len(y)))))
+
+
+PATH_CHECK_RE = re.compile(r"PATH\(\((.+?)\)\)")
+
+
+def transform_check_line(check_line, args):
+    def replace_fn(match):
+        argument = match.group(1)
+        if argument.startswith("[[") and argument.endswith("]]"):
+            pattern = argument
+        else:
+            pattern = "{{%s}}" % argument
+
+        # In non-Windows mode, PATH(()) is a no-op, but has to be removed,
+        # simply replace by the right pattern.
+        if not args.enable_windows_compatibility:
+            return pattern
+        else:
+            slashes_re = get_slashes_re(args)
+            return re.sub(r"/", "%s" % slashes_re, pattern)
+
+    return PATH_CHECK_RE.sub(replace_fn, check_line)
+
+
+PREFIX_SUFFIX_RE = re.compile(r"-COUNT-\d+:|-NEXT:|-SAME:|-NOT:|-DAG:|-LABEL:|-EMPTY:|:")
+NEWLINE_RE = re.compile(r"\r|\n")
+
+
+def transform_check_file(text, check_prefixes, args):
+    prefix_regex = build_check_prefix_regex(check_prefixes)
+
+    # This reproduces, as close as possible, what FileCheck.cpp will do
+    transformed_text = ""
+    current_pos = 0
+    while current_pos < len(text):
+        # Find the first 'CHECK' or custom prefix from the current position
+        match = prefix_regex.search(text, current_pos)
+        if not match:
+            transformed_text += text[current_pos:]
+            current_pos = len(text)
+            break
+
+        # If the match is up to the end of the file, there's nothing to
+        # transform
+        match_end = match.end()
+        if match_end == len(text):
+            transformed_text += text[current_pos:]
+            current_pos = len(text)
+            break
+
+        # Find the prefixes possible suffixes (-NEXT:, -NOT:, etc...)
+        # If there's no match, this wasn't a valid CHECK line, so skip
+        submatch = PREFIX_SUFFIX_RE.match(text, match_end)
+        if not submatch:
+            transformed_text += text[current_pos:match_end]
+            current_pos = match_end
+            continue
+
+        # If the submatch is up to the end of the file, there's nothing to
+        # transform
+        submatch_end = submatch.end()
+        if submatch_end == len(text):
+            transformed_text += text[current_pos:]
+            current_pos = len(text)
+            break
+
+        # Find the next newline, and transform up to it or up to the end of the
+        # file.
+        transformed_text += text[current_pos:submatch_end]
+        current_pos = submatch_end
+        newline_match = NEWLINE_RE.search(text, current_pos)
+        if not newline_match:
+            # The rest of the file is the line to transform
+            transformed_text += transform_check_line(text[current_pos:], args)
+            current_pos = len(text)
+            break
+
+        newline_start, newline_end = newline_match.span()
+        transformed_text += transform_check_line(text[current_pos:newline_start], args)
+        current_pos = newline_start
+
+    return transformed_text
+
+
+def invoke_file_check(file_check_path, args, input):
+    p = subprocess.Popen([file_check_path] + args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = p.communicate(input)
+    return (p.returncode, stdout, stderr)
+
+
+@contextlib.contextmanager
+def named_temporary_file_with_contents(contents):
+    named_tmp_file = tempfile.NamedTemporaryFile(delete=False)
+    try:
+        named_tmp_file.write(contents)
+        named_tmp_file.flush()
+        named_tmp_file.close()
+        yield named_tmp_file.name
+    finally:
+        os.remove(named_tmp_file.name)
+
+def filter_temporary_filename(contents, original_name, temp_name):
+    file_name_regex = re.compile(r"^%s(:\d+:\d+: )" % re.escape(temp_name))
+    return file_name_regex.sub(r"%s\1" % original_name, contents)
+
+def main():
+    args, unknown_args = parse_path_sanitizing_file_check_arguments()
+    file_check_args, really_unknown_args = parse_file_check_arguments(unknown_args)
+    if len(really_unknown_args) != 0:
+        print("Unknown FileCheck arguments: %s" % ', '.join(really_unknown_args))
+        return -1
+
+    slashes_re = get_slashes_re(args)
+    input = sanitize_input(sys.stdin.read(), args.sanitize_strings, slashes_re)
 
     if args.dry_run:
-        print(stdin)
+        print(input)
         return 0
     else:
-        p = subprocess.Popen(
-            [args.file_check_path] + unknown_args, stdin=subprocess.PIPE)
-        stdout, stderr = p.communicate(stdin)
-        if stdout is not None:
-            print(stdout)
-        if stderr is not None:
-            print(stderr, file=sys.stderr)
-        return p.wait()
+        check_prefixes = get_check_prefixes(file_check_args.check_prefixes)
+        check_file_contents = transform_check_file(open(file_check_args.check_file).read(), check_prefixes, args)
+
+        with named_temporary_file_with_contents(check_file_contents) as fn:
+            del unknown_args[unknown_args.index(file_check_args.check_file)]
+            exit_code, stdout, stderr = invoke_file_check(args.file_check_path, unknown_args + [fn], input)
+            if stdout is not None:
+                print(filter_temporary_filename(stdout, file_check_args.check_file, fn))
+            if stderr is not None:
+                print(filter_temporary_filename(stderr, file_check_args.check_file, fn), file=sys.stderr)
+            return exit_code
 
 
 if __name__ == '__main__':
