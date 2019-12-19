@@ -99,7 +99,7 @@
 
 // CHECK-NEXT: {{(bin/)?}}ld{{"? }}
 // CHECK-DAG: [[OBJECTFILE]]
-// CHECK-DAG: -L [[STDLIB_PATH:[^ ]+(/|\\\\)lib(/|\\\\)swift(/|\\\\)macosx]]
+// CHECK-DAG: -L PATH(([[STDLIB_PATH:[^ ]+/lib/swift/macosx]]))
 // CHECK-DAG: -rpath [[STDLIB_PATH]]
 // CHECK-DAG: -lSystem
 // CHECK-DAG: -arch x86_64
@@ -121,7 +121,7 @@
 
 // IOS_SIMPLE: {{(bin/)?}}ld{{"? }}
 // IOS_SIMPLE-DAG: [[OBJECTFILE]]
-// IOS_SIMPLE-DAG: -L {{[^ ]+(/|\\\\)lib(/|\\\\)swift(/|\\\\)iphonesimulator}}
+// IOS_SIMPLE-DAG: -L PATH(([^ ]+/lib/swift/iphonesimulator))
 // IOS_SIMPLE-DAG: -lSystem
 // IOS_SIMPLE-DAG: -arch x86_64
 // IOS_SIMPLE-DAG: -ios_simulator_version_min 7.1.{{[0-9]+}}
@@ -133,7 +133,7 @@
 
 // tvOS_SIMPLE: {{(bin/)?}}ld{{"? }}
 // tvOS_SIMPLE-DAG: [[OBJECTFILE]]
-// tvOS_SIMPLE-DAG: -L {{[^ ]+(/|\\\\)lib(/|\\\\)swift(/|\\\\)appletvsimulator}}
+// tvOS_SIMPLE-DAG: -L PATH(([^ ]+/lib/swift/appletvsimulator))
 // tvOS_SIMPLE-DAG: -lSystem
 // tvOS_SIMPLE-DAG: -arch x86_64
 // tvOS_SIMPLE-DAG: -tvos_simulator_version_min 9.0.{{[0-9]+}}
@@ -145,7 +145,7 @@
 
 // watchOS_SIMPLE: {{(bin/)?}}ld{{"? }}
 // watchOS_SIMPLE-DAG: [[OBJECTFILE]]
-// watchOS_SIMPLE-DAG: -L {{[^ ]+(/|\\\\)lib(/|\\\\)swift(/|\\\\)watchsimulator}}
+// watchOS_SIMPLE-DAG: -L PATH(([^ ]+/lib/swift/watchsimulator))
 // watchOS_SIMPLE-DAG: -lSystem
 // watchOS_SIMPLE-DAG: -arch i386
 // watchOS_SIMPLE-DAG: -watchos_simulator_version_min 2.0.{{[0-9]+}}
@@ -159,7 +159,7 @@
 // LINUX-x86_64-DAG: -pie
 // LINUX-x86_64-DAG: [[OBJECTFILE]]
 // LINUX-x86_64-DAG: -lswiftCore
-// LINUX-x86_64-DAG: -L [[STDLIB_PATH:[^ ]+(/|\\\\)lib(/|\\\\)swift(/|\\\\)]]
+// LINUX-x86_64-DAG: -L PATH(([[STDLIB_PATH:[^ ]+/lib/swift/]]))
 // LINUX-x86_64-DAG: -Xlinker -rpath -Xlinker [[STDLIB_PATH]]
 // LINUX-x86_64-DAG: -F foo -iframework car -F cdr
 // LINUX-x86_64-DAG: -framework bar
@@ -175,7 +175,7 @@
 // LINUX-armv6-DAG: -pie
 // LINUX-armv6-DAG: [[OBJECTFILE]]
 // LINUX-armv6-DAG: -lswiftCore
-// LINUX-armv6-DAG: -L [[STDLIB_PATH:[^ ]+(/|\\\\)lib(/|\\\\)swift(/|\\\\)]]
+// LINUX-armv6-DAG: -L PATH(([[STDLIB_PATH:[^ ]+/lib/swift/]]))
 // LINUX-armv6-DAG: -target armv6-unknown-linux-gnueabihf
 // LINUX-armv6-DAG: -Xlinker -rpath -Xlinker [[STDLIB_PATH]]
 // LINUX-armv6-DAG: -F foo -iframework car -F cdr
@@ -192,7 +192,7 @@
 // LINUX-armv7-DAG: -pie
 // LINUX-armv7-DAG: [[OBJECTFILE]]
 // LINUX-armv7-DAG: -lswiftCore
-// LINUX-armv7-DAG: -L [[STDLIB_PATH:[^ ]+(/|\\\\)lib(/|\\\\)swift(/|\\\\)]]
+// LINUX-armv7-DAG: -L PATH(([[STDLIB_PATH:[^ ]+/lib/swift/]]))
 // LINUX-armv7-DAG: -target armv7-unknown-linux-gnueabihf
 // LINUX-armv7-DAG: -Xlinker -rpath -Xlinker [[STDLIB_PATH]]
 // LINUX-armv7-DAG: -F foo -iframework car -F cdr
@@ -209,7 +209,7 @@
 // LINUX-thumbv7-DAG: -pie
 // LINUX-thumbv7-DAG: [[OBJECTFILE]]
 // LINUX-thumbv7-DAG: -lswiftCore
-// LINUX-thumbv7-DAG: -L [[STDLIB_PATH:[^ ]+(/|\\\\)lib(/|\\\\)swift(/|\\\\)]]
+// LINUX-thumbv7-DAG: -L PATH(([[STDLIB_PATH:[^ ]+/lib/swift/]]))
 // LINUX-thumbv7-DAG: -target thumbv7-unknown-linux-gnueabihf
 // LINUX-thumbv7-DAG: -Xlinker -rpath -Xlinker [[STDLIB_PATH]]
 // LINUX-thumbv7-DAG: -F foo -iframework car -F cdr
@@ -226,7 +226,7 @@
 // ANDROID-armv7-DAG: -pie
 // ANDROID-armv7-DAG: [[OBJECTFILE]]
 // ANDROID-armv7-DAG: -lswiftCore
-// ANDROID-armv7-DAG: -L [[STDLIB_PATH:[^ ]+(/|\\\\)lib(/|\\\\)swift]]
+// ANDROID-armv7-DAG: -L PATH(([[STDLIB_PATH:[^ ]+/lib/swift]]))
 // ANDROID-armv7-DAG: -target armv7-unknown-linux-androideabi
 // ANDROID-armv7-DAG: -F foo -iframework car -F cdr
 // ANDROID-armv7-DAG: -framework bar
@@ -242,7 +242,7 @@
 // CYGWIN-x86_64: clang{{(\.exe)?"? }}
 // CYGWIN-x86_64-DAG: [[OBJECTFILE]]
 // CYGWIN-x86_64-DAG: -lswiftCore
-// CYGWIN-x86_64-DAG: -L [[STDLIB_PATH:[^ ]+(/|\\\\)lib(/|\\\\)swift]]
+// CYGWIN-x86_64-DAG: -L PATH(([[STDLIB_PATH:[^ ]+/lib/swift]]))
 // CYGWIN-x86_64-DAG: -Xlinker -rpath -Xlinker [[STDLIB_PATH]]
 // CYGWIN-x86_64-DAG: -F foo -iframework car -F cdr
 // CYGWIN-x86_64-DAG: -framework bar
@@ -256,7 +256,7 @@
 
 // WINDOWS-x86_64: clang{{(\.exe)?"? }}
 // WINDOWS-x86_64-DAG: [[OBJECTFILE]]
-// WINDOWS-x86_64-DAG: -L [[STDLIB_PATH:[^ ]+(/|\\\\)lib(/|\\\\)swift(/|\\\\)windows(/|\\\\)x86_64]]
+// WINDOWS-x86_64-DAG: -L PATH(([[STDLIB_PATH:[^ ]+/lib/swift/windows/x86_64]]))
 // WINDOWS-x86_64-DAG: -F foo -iframework car -F cdr
 // WINDOWS-x86_64-DAG: -framework bar
 // WINDOWS-x86_64-DAG: -L baz
@@ -284,8 +284,8 @@
 // LINUX_DYNLIB-x86_64-DAG: -shared
 // LINUX_DYNLIB-x86_64-DAG: -fuse-ld=gold
 // LINUX_DYNLIB-x86_64-NOT: -pie
-// LINUX_DYNLIB-x86_64-DAG: -Xlinker -rpath -Xlinker [[STDLIB_PATH:[^ ]+(/|\\\\)lib(/|\\\\)swift(/|\\\\)linux]]
-// LINUX_DYNLIB-x86_64: [[STDLIB_PATH]]{{/|\\\\}}x86_64{{/|\\\\}}swiftrt.o
+// LINUX_DYNLIB-x86_64-DAG: -Xlinker -rpath -Xlinker PATH(([[STDLIB_PATH:[^ ]+/lib/swift/linux]]))
+// LINUX_DYNLIB-x86_64: [[STDLIB_PATH]]PATH((/x86_64/swiftrt.o))
 // LINUX_DYNLIB-x86_64-DAG: [[OBJECTFILE]]
 // LINUX_DYNLIB-x86_64-DAG: @[[AUTOLINKFILE]]
 // LINUX_DYNLIB-x86_64-DAG: [[STDLIB_PATH]]
@@ -297,7 +297,7 @@
 // IOS-linker-order: -o [[OBJECTFILE:.*]]
 
 // IOS-linker-order: {{(bin/)?}}ld{{"? }}
-// IOS-linker-order: -rpath [[STDLIB_PATH:[^ ]+(/|\\\\)lib(/|\\\\)swift(/|\\\\)iphonesimulator]]
+// IOS-linker-order: -rpath PATH(([[STDLIB_PATH:[^ ]+/lib/swift/iphonesimulator]]))
 // IOS-linker-order: -L foo
 // IOS-linker-order: -rpath customrpath
 // IOS-linker-order: -o {{.*}}
@@ -306,7 +306,7 @@
 // LINUX-linker-order: -o [[OBJECTFILE:.*]]
 
 // LINUX-linker-order: clang{{(\.exe)?"? }}
-// LINUX-linker-order: -Xlinker -rpath -Xlinker {{[^ ]+(/|\\\\)lib(/|\\\\)swift(/|\\\\)linux}}
+// LINUX-linker-order: -Xlinker -rpath -Xlinker PATH(([^ ]+/lib/swift/linux))
 // LINUX-linker-order: -L foo
 // LINUX-linker-order: -Xlinker -rpath -Xlinker customrpath
 // LINUX-linker-order: -o {{.*}}
@@ -332,22 +332,22 @@
 // WASI-clang-linker-order: -flag arg
 // WASI-clang-linker-order: -o {{.*}}
 
-// DEBUG: bin{{/|\\\\}}swift{{c?(\.EXE)?}}
-// DEBUG-NEXT: bin{{/|\\\\}}swift{{c?(\.EXE)?}}
+// DEBUG: PATH((bin/swiftc?(\.EXE)?))
+// DEBUG-NEXT: PATH((bin/swiftc?(\.EXE)?))
 // DEBUG-NEXT: {{(bin/)?}}ld{{"? }}
 // DEBUG: -add_ast_path {{.*(/|\\\\)[^/]+}}.swiftmodule
 // DEBUG: -o linker
-// DEBUG-NEXT: bin{{/|\\\\}}dsymutil
+// DEBUG-NEXT: PATH((bin/dsymutil))
 // DEBUG: linker
 // DEBUG: -o linker.dSYM
 
-// LINK-SWIFTMODULES: bin{{/|\\\\}}swift{{c?(\.EXE)?}}
+// LINK-SWIFTMODULES: PATH((bin/swiftc?(\.EXE)?))
 // LINK-SWIFTMODULES-NEXT: {{(bin/)?}}ld{{"? }}
 // LINK-SWIFTMODULES-SAME: -add_ast_path {{.*}}/a.swiftmodule
 // LINK-SWIFTMODULES-SAME: -add_ast_path {{.*}}/b.swiftmodule
 // LINK-SWIFTMODULES-SAME: -o linker
 
-// COMPILE_AND_LINK: bin{{/|\\\\}}swift{{c?(\.EXE)?}}
+// COMPILE_AND_LINK: PATH((bin/swiftc?(\.EXE)?))
 // COMPILE_AND_LINK-NOT: /a.o
 // COMPILE_AND_LINK: linker.swift
 // COMPILE_AND_LINK-NOT: /a.o
@@ -366,7 +366,7 @@
 // FILELIST-CONTENTS: /linker-{{.*}}.o
 // FILELIST-CONTENTS: /a.o
 
-// INFERRED_NAME_DARWIN: bin{{/|\\\\}}swift{{c?(\.EXE)?}}
+// INFERRED_NAME_DARWIN: PATH((bin/swiftc?(\.EXE)?))
 // INFERRED_NAME_DARWIN: -module-name LINKER
 // INFERRED_NAME_DARWIN: {{(bin/)?}}ld{{"? }}
 // INFERRED_NAME_DARWIN:  -o libLINKER.dylib
@@ -384,8 +384,8 @@
 // RUN: %hardlink-or-copy(from: %swift_driver_plain, to: %t/DISTINCTIVE-PATH/usr/bin/swiftc)
 // RUN: %t/DISTINCTIVE-PATH/usr/bin/swiftc -target x86_64-apple-macosx10.9 %s -### | %FileCheck -check-prefix=RELATIVE-LINKER %s
 
-// RELATIVE-LINKER: {{/|\\\\}}DISTINCTIVE-PATH{{/|\\\\}}usr{{/|\\\\}}bin{{/|\\\\}}swift
-// RELATIVE-LINKER: {{/|\\\\}}DISTINCTIVE-PATH{{/|\\\\}}usr{{/|\\\\}}bin{{/|\\\\}}ld
+// RELATIVE-LINKER: PATH((/DISTINCTIVE-PATH/usr/bin/swift))
+// RELATIVE-LINKER: PATH((/DISTINCTIVE-PATH/usr/bin/ld))
 // RELATIVE-LINKER: -o {{[^ ]+}}
 
 // Also test arclite detection. This uses xcrun to find arclite when it's not
@@ -397,16 +397,16 @@
 
 // RUN: env PATH=%t/ANOTHER-DISTINCTIVE-PATH/usr/bin %t/DISTINCTIVE-PATH/usr/bin/swiftc -target x86_64-apple-macosx10.9 %s -### | %FileCheck -check-prefix=XCRUN_ARCLITE %s
 
-// XCRUN_ARCLITE: bin{{/|\\\\}}ld
-// XCRUN_ARCLITE: {{/|\\\\}}ANOTHER-DISTINCTIVE-PATH{{/|\\\\}}usr{{/|\\\\}}lib{{/|\\\\}}arc{{/|\\\\}}libarclite_macosx.a
+// XCRUN_ARCLITE: PATH((bin/ld))
+// XCRUN_ARCLITE: PATH((/ANOTHER-DISTINCTIVE-PATH/usr/lib/arc/libarclite_macosx.a))
 // XCRUN_ARCLITE: -o {{[^ ]+}}
 
 // RUN: %empty-directory(%t/DISTINCTIVE-PATH/usr/lib/arc)
 
 // RUN: env PATH=%t/ANOTHER-DISTINCTIVE-PATH/usr/bin %t/DISTINCTIVE-PATH/usr/bin/swiftc -target x86_64-apple-macosx10.9 %s -### | %FileCheck -check-prefix=RELATIVE_ARCLITE %s
 
-// RELATIVE_ARCLITE: bin{{/|\\\\}}ld
-// RELATIVE_ARCLITE: {{/|\\\\}}DISTINCTIVE-PATH{{/|\\\\}}usr{{/|\\\\}}lib{{/|\\\\}}arc{{/|\\\\}}libarclite_macosx.a
+// RELATIVE_ARCLITE: PATH((bin/ld))
+// RELATIVE_ARCLITE: PATH((/DISTINCTIVE-PATH/usr/lib/arc/libarclite_macosx.a))
 // RELATIVE_ARCLITE: -o {{[^ ]+}}
 
 

@@ -24,25 +24,25 @@
 
 // MODULE: -frontend
 // MODULE-DAG: -num-threads 4
-// MODULE-DAG: {{[^ ]*[/\\]}}Inputs{{/|\\\\}}main.swift{{"?}} {{[^ ]*[/\\]}}multi-threaded.swift 
+// MODULE-DAG: PATH(([^ ]*/Inputs/main.swift"?)) PATH(([^ ]*/multi-threaded.swift))
 // MODULE-DAG: -o test.swiftmodule
 // MODULE-NOT: {{ld|clang}}
 
 // ASSEMBLY: -frontend
 // ASSEMBLY-DAG: -num-threads 4
-// ASSEMBLY-DAG: {{[^ ]*[/\\]}}Inputs{{/|\\\\}}main.swift{{"?}} {{[^ ]*[/\\]}}multi-threaded.swift 
+// ASSEMBLY-DAG: PATH(([^ ]*/Inputs/main.swift"?)) PATH(([^ ]*/multi-threaded.swift))
 // ASSEMBLY-DAG: -o /build/main.s -o /build/multi-threaded.s
 // ASSEMBLY-NOT: {{ld|clang}}
 
 // OBJECT: -frontend
 // OBJECT-DAG: -num-threads 4
-// OBJECT-DAG: {{[^ ]*[/\\]}}Inputs{{/|\\\\}}main.swift{{"?}} {{[^ ]*[/\\]}}multi-threaded.swift 
-// OBJECT-DAG: -o main.o -o multi-threaded.o 
+// OBJECT-DAG: PATH(([^ ]*/Inputs/main.swift"?)) PATH(([^ ]*/multi-threaded.swift))
+// OBJECT-DAG: -o main.o -o multi-threaded.o
 // OBJECT-NOT: {{ld|clang}}
 
 // BITCODE: -frontend
 // BITCODE-DAG: -num-threads 4
-// BITCODE-DAG: {{[^ ]*[/\\]}}Inputs{{/|\\\\}}main.swift{{"?}} {{[^ ]*[/\\]}}multi-threaded.swift 
+// BITCODE-DAG: PATH(([^ ]*/Inputs/main.swift"?)) PATH(([^ ]*/multi-threaded.swift))
 // BITCODE-DAG: -o {{.*[/\\]}}main.bc -o {{.*[/\\]}}multi-threaded.bc
 // BITCODE-DAG: -frontend -c -primary-file {{.*[/\\]}}main.bc {{.*}} -o {{[^ ]*}}main.o
 // BITCODE-DAG: -frontend -c -primary-file {{.*[/\\]}}multi-threaded.bc {{.*}} -o {{[^ ]*}}multi-threaded.o
@@ -54,7 +54,7 @@
 
 // EXEC: -frontend
 // EXEC-DAG: -num-threads 4
-// EXEC-DAG: {{[^ ]*[/\\]}}Inputs{{/|\\\\}}main.swift{{"?}} {{[^ ]*[/\\]}}multi-threaded.swift 
+// EXEC-DAG: PATH(([^ ]*/Inputs/main.swift"?)) PATH(([^ ]*/multi-threaded.swift))
 // EXEC-DAG:  -o {{.*te?mp.*[/\\]}}main{{[^ ]*}}.o{{"?}} -o {{.*te?mp.*[/\\]}}multi-threaded{{[^ ]*}}.o
 // EXEC: {{ld|clang}}
 // EXEC:  {{.*te?mp.*[/\\]}}main{{[^ ]*}}.o{{"?}} {{.*te?mp.*[/\\]}}multi-threaded{{[^ ]*}}.o
@@ -89,4 +89,3 @@
 // PARSEABLE3:   "path": "a.out"
 
 func libraryFunction() {}
-

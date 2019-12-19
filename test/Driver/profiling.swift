@@ -26,36 +26,36 @@
 // CHECK: -profile-generate
 
 // OSX: {{(bin/)?ld(.exe)?"? }}
-// OSX: lib{{(\\\\|/)}}swift{{(\\\\|/)}}clang{{(\\\\|/)}}lib{{(\\\\|/)}}darwin{{(\\\\|/)}}libclang_rt.profile_osx.a
+// OSX: PATH((lib/swift/clang/lib/darwin/libclang_rt.profile_osx.a))
 
 // IOS: {{(bin/)?ld(.exe)?"? }}
-// IOS: lib{{(\\\\|/)}}swift{{(\\\\|/)}}clang{{(\\\\|/)}}lib{{(\\\\|/)}}darwin{{(\\\\|/)}}libclang_rt.profile_ios.a
+// IOS: PATH((lib/swift/clang/lib/darwin/libclang_rt.profile_ios.a))
 
 // IOSSIM: {{(bin/)?ld(.exe)?"? }}
-// IOSSIM: lib{{(\\\\|/)}}swift{{(\\\\|/)}}clang{{(\\\\|/)}}lib{{(\\\\|/)}}darwin{{(\\\\|/)}}libclang_rt.profile_iossim.a
+// IOSSIM: PATH((lib/swift/clang/lib/darwin/libclang_rt.profile_iossim.a))
 
 // tvOS: {{(bin/)?ld(.exe)?"? }}
-// tvOS: lib{{(\\\\|/)}}swift{{(\\\\|/)}}clang{{(\\\\|/)}}lib{{(\\\\|/)}}darwin{{(\\\\|/)}}libclang_rt.profile_tvos.a
+// tvOS: PATH((lib/swift/clang/lib/darwin/libclang_rt.profile_tvos.a))
 
 // tvOS_SIM: {{(bin/)?ld(.exe)?"? }}
-// tvOS_SIM: lib{{(\\\\|/)}}swift{{(\\\\|/)}}clang{{(\\\\|/)}}lib{{(\\\\|/)}}darwin{{(\\\\|/)}}libclang_rt.profile_tvossim.a
+// tvOS_SIM: PATH((lib/swift/clang/lib/darwin/libclang_rt.profile_tvossim.a))
 
 // watchOS: {{(bin/)?ld(.exe)?"? }}
-// watchOS: lib{{(\\\\|/)}}swift{{(\\\\|/)}}clang{{(\\\\|/)}}lib{{(\\\\|/)}}darwin{{(\\\\|/)}}libclang_rt.profile_watchos.a
+// watchOS: PATH((lib/swift/clang/lib/darwin/libclang_rt.profile_watchos.a))
 
 // watchOS_SIM: {{(bin/)?ld(.exe)?"? }}
-// watchOS_SIM: lib{{(\\\\|/)}}swift{{(\\\\|/)}}clang{{(\\\\|/)}}lib{{(\\\\|/)}}darwin{{(\\\\|/)}}libclang_rt.profile_watchossim.a
+// watchOS_SIM: PATH((lib/swift/clang/lib/darwin/libclang_rt.profile_watchossim.a))
 
 // LINUX: clang{{(\.exe)?"? }}
-// LINUX: lib{{(\\\\|/)}}swift{{(\\\\|/)}}clang{{(\\\\|/)}}lib{{(\\\\|/)}}linux{{(\\\\|/)}}libclang_rt.profile-x86_64.a
+// LINUX: PATH((lib/swift/clang/lib/linux/libclang_rt.profile-x86_64.a))
 // LINUX: -u__llvm_profile_runtime
 
 // WINDOWS: clang{{(\.exe)?"? }}
-// WINDOWS: lib{{(\\\\|/)}}swift{{(\\\\|/)}}clang{{(\\\\|/)}}lib{{(\\\\|/)}}windows{{(\\\\|/)}}clang_rt.profile-x86_64.lib
+// WINDOWS: PATH((lib/swift/clang/lib/windows/clang_rt.profile-x86_64.lib))
 // WINDOWS: -u__llvm_profile_runtime
 
 // WASI: clang{{(\.exe)?"? }}
-// WASI: lib{{(\\\\|/)}}swift{{(\\\\|/)}}clang{{(\\\\|/)}}lib{{(\\\\|/)}}wasi{{(\\\\|/)}}libclang_rt.profile-wasm32.a
+// WASI: PATH((lib/swift/clang/lib/wasi/libclang_rt.profile-wasm32.a))
 // WASI: -u__llvm_profile_runtime
 
 // RUN: not %swiftc_driver -driver-print-jobs -profile-generate -profile-use=/dev/null %s 2>&1 | %FileCheck -check-prefix=MIX_GEN_USE %s

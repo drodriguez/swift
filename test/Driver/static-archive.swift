@@ -32,11 +32,11 @@
 // CHECK-WINDOWS-LLD-DAG: [[OBJECTFILE]]
 // CHECK-WINDOWS-LLD: /OUT:{{[^ ]+}}
 
-// RUN: %swiftc_driver -driver-print-jobs -target x86_64-apple-macosx10.9 -emit-library %s -module-name ARCHIVER -static | %FileCheck -check-prefix INFERRED_NAME_DARWIN %s
+// RUN: %swiftc_driver -driver-print-jobs -target x86_64-apple-macosx10.9 -emit-library %s -module-name ARCHIVER -static | %FileCheck --enable-yaml-compatibility -check-prefix INFERRED_NAME_DARWIN %s
 // RUN: %swiftc_driver -driver-print-jobs -target x86_64-unknown-linux-gnu -emit-library %s -module-name ARCHIVER -static | %FileCheck -check-prefix INFERRED_NAME_LINUX %s
 // RUN: %swiftc_driver -driver-print-jobs -target x86_64-unknown-windows-msvc -emit-library %s -module-name ARCHIVER -static | %FileCheck -check-prefix INFERRED_NAME_WINDOWS %s
 
-// INFERRED_NAME_DARWIN: bin{{/|\\\\}}swift{{c?(\.EXE)?}}
+// INFERRED_NAME_DARWIN: PATH((bin/swift{{c?(\.EXE)?}}))
 // INFERRED_NAME_DARWIN: -module-name ARCHIVER
 // INFERRED_NAME_DARWIN: libtool -static
 // INFERRED_NAME_DARWIN:  -o libARCHIVER.a

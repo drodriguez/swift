@@ -5,7 +5,7 @@
 
 // RUN: %target-swift-frontend -emit-dependencies-path %t.d -emit-reference-dependencies-path %t.swiftdeps -typecheck -primary-file "%S/../Inputs/empty file.swift"
 // RUN: %FileCheck -check-prefix=CHECK-BASIC %s < %t.d
-// RUN: %FileCheck -check-prefix=CHECK-BASIC-YAML %s < %t.swiftdeps
+// RUN: %FileCheck --enable-yaml-compatibility -check-prefix=CHECK-BASIC-YAML %s < %t.swiftdeps
 
 // CHECK-BASIC-LABEL: - :
 // CHECK-BASIC: Inputs/empty\ file.swift
@@ -14,7 +14,7 @@
 
 // CHECK-BASIC-YAML-LABEL: depends-external:
 // CHECK-BASIC-YAML-NOT: empty\ file.swift
-// CHECK-BASIC-YAML: "{{.*}}{{/|\\}}Swift.swiftmodule{{(/.+[.]swiftmodule)?}}"
+// CHECK-BASIC-YAML: "PATH(({{.*}}/Swift.swiftmodule{{(/.+[.]swiftmodule)?}}))"
 // CHECK-BASIC-YAML-NOT: {{:$}}
 
 
@@ -41,15 +41,15 @@
 
 // RUN: %target-swift-frontend(mock-sdk: %clang-importer-sdk) -enable-objc-interop -disable-objc-attr-requires-foundation-module -import-objc-header %S/Inputs/dependencies/extra-header.h -emit-dependencies-path - -resolve-imports %s | %FileCheck -check-prefix=CHECK-IMPORT %s
 // RUN: %target-swift-frontend(mock-sdk: %clang-importer-sdk) -enable-objc-interop -disable-objc-attr-requires-foundation-module -import-objc-header %S/Inputs/dependencies/extra-header.h -track-system-dependencies -emit-dependencies-path - -resolve-imports %s | %FileCheck -check-prefix=CHECK-IMPORT-TRACK-SYSTEM %s
-// RUN: %target-swift-frontend(mock-sdk: %clang-importer-sdk) -enable-objc-interop -disable-objc-attr-requires-foundation-module -import-objc-header %S/Inputs/dependencies/extra-header.h -emit-reference-dependencies-path - -typecheck -primary-file %s | %FileCheck -check-prefix=CHECK-IMPORT-YAML %s
+// RUN: %target-swift-frontend(mock-sdk: %clang-importer-sdk) -enable-objc-interop -disable-objc-attr-requires-foundation-module -import-objc-header %S/Inputs/dependencies/extra-header.h -emit-reference-dependencies-path - -typecheck -primary-file %s | %FileCheck --enable-yaml-compatibility -check-prefix=CHECK-IMPORT-YAML %s
 
 // CHECK-IMPORT-LABEL: - :
 // CHECK-IMPORT: dependencies.swift
 // CHECK-IMPORT-DAG: Swift.swiftmodule
 // CHECK-IMPORT-DAG: Inputs/dependencies/$$$$$$$$$$.h
-// CHECK-IMPORT-DAG: Inputs/dependencies{{/|\\}}UserClangModule.h
+// CHECK-IMPORT-DAG: PATH((Inputs/dependencies/UserClangModule.h))
 // CHECK-IMPORT-DAG: Inputs/dependencies/extra-header.h
-// CHECK-IMPORT-DAG: Inputs/dependencies{{/|\\}}module.modulemap
+// CHECK-IMPORT-DAG: PATH((Inputs/dependencies/module.modulemap))
 // CHECK-IMPORT-DAG: ObjectiveC.swift
 // CHECK-IMPORT-DAG: Foundation.swift
 // CHECK-IMPORT-DAG: CoreGraphics.swift
@@ -64,30 +64,30 @@
 // CHECK-IMPORT-TRACK-SYSTEM-DAG: Foundation.swift
 // CHECK-IMPORT-TRACK-SYSTEM-DAG: ObjectiveC.swift
 // CHECK-IMPORT-TRACK-SYSTEM-DAG: Inputs/dependencies/$$$$$$$$$$.h
-// CHECK-IMPORT-TRACK-SYSTEM-DAG: Inputs/dependencies{{/|\\}}UserClangModule.h
+// CHECK-IMPORT-TRACK-SYSTEM-DAG: PATH((Inputs/dependencies/UserClangModule.h))
 // CHECK-IMPORT-TRACK-SYSTEM-DAG: Inputs/dependencies/extra-header.h
-// CHECK-IMPORT-TRACK-SYSTEM-DAG: Inputs/dependencies{{/|\\}}module.modulemap
-// CHECK-IMPORT-TRACK-SYSTEM-DAG: swift{{/|\\}}shims{{/|\\}}module.modulemap
-// CHECK-IMPORT-TRACK-SYSTEM-DAG: usr{{/|\\}}include{{/|\\}}CoreFoundation.h
-// CHECK-IMPORT-TRACK-SYSTEM-DAG: usr{{/|\\}}include{{/|\\}}CoreGraphics.apinotes
-// CHECK-IMPORT-TRACK-SYSTEM-DAG: usr{{/|\\}}include{{/|\\}}CoreGraphics.h
-// CHECK-IMPORT-TRACK-SYSTEM-DAG: usr{{/|\\}}include{{/|\\}}Foundation.h
-// CHECK-IMPORT-TRACK-SYSTEM-DAG: usr{{/|\\}}include{{/|\\}}objc{{/|\\}}NSObject.h
-// CHECK-IMPORT-TRACK-SYSTEM-DAG: usr{{/|\\}}include{{/|\\}}objc{{/|\\}}ObjectiveC.apinotes
-// CHECK-IMPORT-TRACK-SYSTEM-DAG: usr{{/|\\}}include{{/|\\}}objc{{/|\\}}module.map
-// CHECK-IMPORT-TRACK-SYSTEM-DAG: usr{{/|\\}}include{{/|\\}}objc{{/|\\}}objc.h
+// CHECK-IMPORT-TRACK-SYSTEM-DAG: PATH((Inputs/dependencies/module.modulemap))
+// CHECK-IMPORT-TRACK-SYSTEM-DAG: PATH((swift/shims/module.modulemap))
+// CHECK-IMPORT-TRACK-SYSTEM-DAG: PATH((usr/include/CoreFoundation.h))
+// CHECK-IMPORT-TRACK-SYSTEM-DAG: PATH((usr/include/CoreGraphics.apinotes))
+// CHECK-IMPORT-TRACK-SYSTEM-DAG: PATH((usr/include/CoreGraphics.h))
+// CHECK-IMPORT-TRACK-SYSTEM-DAG: PATH((usr/include/Foundation.h))
+// CHECK-IMPORT-TRACK-SYSTEM-DAG: PATH((usr/include/objc/NSObject.h))
+// CHECK-IMPORT-TRACK-SYSTEM-DAG: PATH((usr/include/objc/ObjectiveC.apinotes))
+// CHECK-IMPORT-TRACK-SYSTEM-DAG: PATH((usr/include/objc/module.map))
+// CHECK-IMPORT-TRACK-SYSTEM-DAG: PATH((usr/include/objc/objc.h))
 // CHECK-IMPORT-TRACK-SYSTEM-NOT: {{[^\\]}}:
 
 // CHECK-IMPORT-YAML-LABEL: depends-external:
 // CHECK-IMPORT-YAML-NOT: dependencies.swift
-// CHECK-IMPORT-YAML-DAG: "{{.*}}{{/|\\}}Swift.swiftmodule{{(/.+[.]swiftmodule)?}}"
-// CHECK-IMPORT-YAML-DAG: "{{.*}}Inputs/dependencies/$$$$$.h"
-// CHECK-IMPORT-YAML-DAG: "{{.*}}Inputs/dependencies{{/|\\\\}}UserClangModule.h"
-// CHECK-IMPORT-YAML-DAG: "{{.*}}Inputs/dependencies/extra-header.h"
-// CHECK-IMPORT-YAML-DAG: "{{.*}}Inputs/dependencies{{/|\\\\}}module.modulemap"
-// CHECK-IMPORT-YAML-DAG: "{{.*}}{{/|\\\\}}ObjectiveC.swift"
-// CHECK-IMPORT-YAML-DAG: "{{.*}}{{/|\\\\}}Foundation.swift"
-// CHECK-IMPORT-YAML-DAG: "{{.*}}{{/|\\\\}}CoreGraphics.swift"
+// CHECK-IMPORT-YAML-DAG: "PATH(({{.*}}/Swift.swiftmodule{{(/.+[.]swiftmodule)?}}))"
+// CHECK-IMPORT-YAML-DAG: "PATH(({{.*}}Inputs/dependencies/$$$$$.h))"
+// CHECK-IMPORT-YAML-DAG: "PATH(({{.*}}Inputs/dependencies/UserClangModule.h))"
+// CHECK-IMPORT-YAML-DAG: "PATH(({{.*}}Inputs/dependencies/extra-header.h))"
+// CHECK-IMPORT-YAML-DAG: "PATH(({{.*}}Inputs/dependencies/module.modulemap))"
+// CHECK-IMPORT-YAML-DAG: "PATH(({{.*}}/ObjectiveC.swift))"
+// CHECK-IMPORT-YAML-DAG: "PATH(({{.*}}/Foundation.swift))"
+// CHECK-IMPORT-YAML-DAG: "PATH(({{.*}}/CoreGraphics.swift))"
 // CHECK-IMPORT-YAML-NOT: {{^-}}
 // CHECK-IMPORT-YAML-NOT: {{:$}}
 
