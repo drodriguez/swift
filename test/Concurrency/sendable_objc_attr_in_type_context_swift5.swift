@@ -35,6 +35,7 @@ SWIFT_SENDABLE
 @end
 
 typedef void (^CompletionHandler)(void (^ SWIFT_SENDABLE)(void)) SWIFT_SENDABLE;
+typedef void (^MainActorCompletionHandler)(void (^)(void)) MAIN_ACTOR;
 
 @interface Test : NSObject
 -(void) makeRequest:
@@ -44,6 +45,7 @@ typedef void (^CompletionHandler)(void (^ SWIFT_SENDABLE)(void)) SWIFT_SENDABLE;
 -(void) withSendableCustom: (void (^)(MyValue *_Nullable SWIFT_SENDABLE)) handler;
 -(void) withNonSendable:(NSString *)operation completionHandler:(void (^ _Nullable NONSENDABLE)(NSString *_Nullable, NSError * _Nullable)) handler;
 -(void) withAliasCompletionHandler:(CompletionHandler)handler;
+-(void) withMainActorHandler:(MainActorCompletionHandler)handler;
 @end
 
 // Placement of SWIFT_SENDABLE matters here
@@ -69,6 +71,7 @@ void doSomethingConcurrently(__attribute__((noescape)) void SWIFT_SENDABLE (^blo
 
 func test_sendable_attr_in_type_context(test: Test) {
   let fn: (String?, (any Error)?) -> Void = { _,_ in }
+  let mainFn: @MainActor () -> Void = {}
 
   test.withNonSendable("", completionHandler: fn) // Ok
 
@@ -99,6 +102,8 @@ func test_sendable_attr_in_type_context(test: Test) {
   test.withAliasCompletionHandler { callback in
     doSomethingConcurrently(callback) // Ok
   }
+
+  test.withMainActorHandler(mainFn)
 
   _ = TestWithSendableID<SendableValue>() // Ok
 
