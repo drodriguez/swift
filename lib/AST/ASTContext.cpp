@@ -2870,7 +2870,9 @@ bool ASTContext::canImportModuleImpl(
           ModuleLoader::ModuleVersionInfo &bestUnderlyingVersionInfo) -> bool {
     for (auto &importer : getImpl().ModuleLoaders) {
       ModuleLoader::ModuleVersionInfo versionInfo;
-      if (!importer->canImportModule(ModuleName, loc, &versionInfo))
+      if (!importer->canImportModule(ModuleName, loc, &versionInfo,
+                                     /*isTestableImport=*/false,
+                                     isSourceCanImport))
         continue; // The loader can't find the module.
 
       if (validateVersion(bestVersionInfo, versionInfo,
@@ -2898,7 +2900,9 @@ bool ASTContext::canImportModuleImpl(
   auto lookupModule = [&]() -> bool {
     for (auto &importer : getImpl().ModuleLoaders) {
       ModuleLoader::ModuleVersionInfo versionInfo;
-      if (!importer->canImportModule(ModuleName, loc, &versionInfo))
+      if (!importer->canImportModule(ModuleName, loc, &versionInfo,
+                                     /*isTestableImport=*/false,
+                                     isSourceCanImport))
         continue; // The loader can't find the module.
       return true;
     }
